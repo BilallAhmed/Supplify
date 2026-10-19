@@ -1,0 +1,50 @@
+{
+  "_fit-product-cutout-B84hcuYd.js": {
+    "file": "assets/fit-product-cutout-B84hcuYd.js",
+    "name": "fit-product-cutout"
+  },
+  "_smooth-scroll-CpTsgMfL.js": {
+    "file": "assets/smooth-scroll-CpTsgMfL.js",
+    "name": "smooth-scroll"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-njoLlK7v.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/about.js": {
+    "file": "assets/about-DNzQv7g5.js",
+    "name": "about",
+    "src": "resources/js/about.js",
+    "isEntry": true,
+    "imports": [
+      "_smooth-scroll-CpTsgMfL.js"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-WI9MS8WM.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_fit-product-cutout-B84hcuYd.js"
+    ]
+  },
+  "resources/js/home.js": {
+    "file": "assets/home-BUdboohl.js",
+    "name": "home",
+    "src": "resources/js/home.js",
+    "isEntry": true,
+    "imports": [
+      "_smooth-scroll-CpTsgMfL.js",
+      "_fit-product-cutout-B84hcuYd.js"
+    ],
+    "css": [
+      "assets/home-BNWJ7Zcm.css"
+    ]
+  }
+}
