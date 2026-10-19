@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-label="Blog placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#054648"/>
+      <stop offset="55%" stop-color="#033536"/>
+      <stop offset="100%" stop-color="#022c2e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="78%" cy="18%" r="45%">
+      <stop offset="0%" stop-color="#00b883" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#00b883" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="12%" cy="88%" r="40%">
+      <stop offset="0%" stop-color="#6cc34a" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#6cc34a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="800" fill="url(#bg)"/>
+  <rect width="1280" height="800" fill="url(#glow)"/>
+  <rect width="1280" height="800" fill="url(#glow2)"/>
+  <g opacity="0.18" fill="none" stroke="#eaf8f3" stroke-width="1.5">
+    <circle cx="640" cy="400" r="180"/>
+    <circle cx="640" cy="400" r="260"/>
+  </g>
+  <g transform="translate(640 370)" fill="none" stroke="#eaf8f3" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.92">
+    <path d="M-70-90h90l60 60v150a20 20 0 0 1-20 20h-130a20 20 0 0 1-20-20v-190a20 20 0 0 1 20-20Z"/>
+    <path d="M20-90v60h60"/>
+    <path d="M-36 20h72M-36 70h72"/>
+  </g>
+  <text x="640" y="560" text-anchor="middle" fill="#eaf8f3" font-family="Plus Jakarta Sans, Figtree, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="4" opacity="0.85">SUPPLIFY</text>
+  <text x="640" y="600" text-anchor="middle" fill="#a8c5c2" font-family="Figtree, Arial, sans-serif" font-size="20" letter-spacing="3" opacity="0.8">INSIGHTS</text>
+</svg>
