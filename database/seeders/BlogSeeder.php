@@ -66,7 +66,9 @@ class BlogSeeder extends Seeder
             ],
         ];
 
-        foreach ($posts as $entry) {
+        $dayOffsets = [3, 7, 12, 18];
+
+        foreach ($posts as $index => $entry) {
             $categoryId = PostCategory::query()->where('slug', $entry['category'])->value('id');
 
             $post = Post::query()->updateOrCreate(
@@ -79,7 +81,7 @@ class BlogSeeder extends Seeder
                     'author_id' => $adminId,
                     'featured_image' => $entry['image'],
                     'is_published' => true,
-                    'published_at' => now()->subDays(fake()->numberBetween(1, 20)),
+                    'published_at' => now()->subDays($dayOffsets[$index] ?? ($index + 1)),
                     'seo_title' => $entry['title'].' | Supplify',
                     'seo_description' => $entry['excerpt'],
                 ]

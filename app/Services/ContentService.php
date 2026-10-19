@@ -39,6 +39,12 @@ class ContentService
             ->orderBy('sort_order')
             ->get();
 
+        // Fresh / unseeded databases would otherwise render an empty homepage shell.
+        if ($rows->isEmpty()) {
+            $rows = collect($this->defaultHomepageSections())
+                ->map(fn (array $attrs) => new HomepageSection($attrs));
+        }
+
         $map = [];
         foreach ($rows as $section) {
             if ($section->key === 'testimonials') {
@@ -200,6 +206,114 @@ class ContentService
         }
 
         return $slug;
+    }
+
+    /**
+     * Minimal enabled sections used when the CMS table has not been seeded yet.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function defaultHomepageSections(): array
+    {
+        return [
+            [
+                'key' => 'hero',
+                'title' => 'Formulas you can read',
+                'subtitle' => 'US Supplement Co.',
+                'body' => 'Clean formulas. Clear labels. Built for people who take supplements seriously.',
+                'cta_label' => 'Shop catalog',
+                'cta_url' => '/shop',
+                'config' => [],
+                'is_enabled' => true,
+                'sort_order' => 10,
+            ],
+            [
+                'key' => 'trust',
+                'title' => 'Shopping with confidence',
+                'config' => [
+                    'items' => [
+                        ['title' => 'Transparent labels', 'body' => 'Amounts you can verify at a glance.', 'icon' => 'label'],
+                        ['title' => 'Thoughtful forms', 'body' => 'Ingredients chosen for clarity, not hype.', 'icon' => 'flask'],
+                        ['title' => 'US-focused fulfillment', 'body' => 'Shipping designed around domestic routines.', 'icon' => 'package'],
+                    ],
+                ],
+                'is_enabled' => true,
+                'sort_order' => 20,
+            ],
+            [
+                'key' => 'shop_by_goal',
+                'title' => 'Shop by goal',
+                'subtitle' => 'Find your lane',
+                'body' => 'Browse formulas by the outcomes they support.',
+                'config' => ['limit' => 4],
+                'is_enabled' => true,
+                'sort_order' => 30,
+            ],
+            [
+                'key' => 'featured_products',
+                'title' => 'Featured formulas',
+                'subtitle' => 'Staff picks',
+                'body' => 'A short list of products we recommend starting with.',
+                'cta_label' => 'View All Products',
+                'cta_url' => '/shop',
+                'config' => ['limit' => 12],
+                'is_enabled' => true,
+                'sort_order' => 40,
+            ],
+            [
+                'key' => 'explore_more',
+                'title' => 'Explore More Formulas',
+                'subtitle' => 'From the catalog',
+                'body' => 'More published products from the Supplify catalog, ordered by publication date.',
+                'cta_label' => 'View All Products',
+                'cta_url' => '/shop',
+                'config' => ['limit' => 4],
+                'is_enabled' => true,
+                'sort_order' => 45,
+            ],
+            [
+                'key' => 'story',
+                'title' => 'Our journey',
+                'subtitle' => 'From source to doorstep',
+                'body' => 'A short look at how we move from ingredient selection to the bottle you receive.',
+                'cta_label' => 'Discover Our Approach',
+                'cta_url' => '/pages/about',
+                'image_path' => 'images/homepage/our-journey.webp',
+                'config' => [
+                    'visual' => 'images/homepage/our-journey.webp',
+                    'visual_caption' => 'Formulas shaped for everyday routines',
+                    'beats' => [
+                        ['label' => '01', 'title' => 'Ingredient selection', 'body' => 'We evaluate ingredients for clarity of purpose and fit within a daily routine.', 'icon' => 'leaf'],
+                        ['label' => '02', 'title' => 'Formulation', 'body' => 'Formulas are drafted for readable labels and practical serving sizes.', 'icon' => 'flask'],
+                        ['label' => '03', 'title' => 'Manufacturing & checks', 'body' => 'Production partners follow agreed quality checks before products ship.', 'icon' => 'shield'],
+                        ['label' => '04', 'title' => 'Packaging & delivery', 'body' => 'Finished goods are packed for US-focused fulfillment and careful transit.', 'icon' => 'package'],
+                    ],
+                ],
+                'is_enabled' => true,
+                'sort_order' => 50,
+            ],
+            [
+                'key' => 'education',
+                'title' => 'Learn before you buy',
+                'subtitle' => 'Guides',
+                'body' => 'Short reads that help you choose with confidence.',
+                'cta_label' => 'View all articles',
+                'cta_url' => '/blog',
+                'config' => ['limit' => 3],
+                'is_enabled' => true,
+                'sort_order' => 60,
+            ],
+            [
+                'key' => 'newsletter',
+                'title' => 'Stay in the loop',
+                'subtitle' => 'Newsletter',
+                'body' => 'New formulas, restocks, and practical guidance — no spam.',
+                'cta_label' => 'Subscribe',
+                'config' => [],
+                'is_enabled' => true,
+                'sort_order' => 80,
+            ],
+        ];
     }
 
     /**
