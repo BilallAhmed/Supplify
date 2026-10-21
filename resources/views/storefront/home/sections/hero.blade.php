@@ -1,57 +1,66 @@
 @php
     $slides = $heroSlides ?? collect();
+    $firstTone = ($slides->first()['tone'] ?? 'dark') === 'light' ? 'light' : 'dark';
 @endphp
 
 <section
-    class="home-hero home-hero--promo"
+    class="home-hero home-hero--lifestyle is-tone-{{ $firstTone }}"
     aria-roledescription="carousel"
-    aria-label="Featured collections"
+    aria-label="Featured products"
     data-home-hero
+    data-hero-tone="{{ $firstTone }}"
 >
-    <div class="home-hero__atmosphere" aria-hidden="true" data-hero-atmosphere>
-        <div class="home-hero__bg-stack" data-hero-bg-stack>
-            @foreach ($slides as $i => $slide)
-                @php
-                    $bg = $slide['background'] ?? asset('images/supplify-slider-background.webp');
-                @endphp
-                <img
-                    class="home-hero__bg-image {{ $i === 0 ? 'is-active' : '' }}"
-                    @if ($i === 0)
-                        src="{{ $bg }}"
-                        fetchpriority="high"
-                    @else
-                        data-src="{{ $bg }}"
-                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'%3E%3C/svg%3E"
-                    @endif
-                    alt=""
-                    width="1920"
-                    height="1080"
-                    decoding="async"
-                    data-hero-bg-image
-                    data-bg-index="{{ $i }}"
-                >
-            @endforeach
-        </div>
-        <div class="home-hero__overlay"></div>
-    </div>
-
     <div class="sr-only" aria-live="polite" data-hero-live></div>
 
     <div class="home-hero__viewport">
         @forelse ($slides as $i => $slide)
             @php
-                $products = $slide['products'] ?? [];
-                $countClass = 'is-count-'.min(3, max(1, count($products)));
+                $tone = ($slide['tone'] ?? 'dark') === 'light' ? 'light' : 'dark';
+                $desktop = $slide['scene'] ?? '';
+                $mobile = $slide['scene_mobile'] ?? $desktop;
+                $alt = $slide['scene_alt'] ?? ($slide['title'] ?? 'Supplify products');
+                $w = (int) ($slide['width'] ?? 1905);
+                $h = (int) ($slide['height'] ?? 732);
+                $focus = $slide['focus'] ?? '70% center';
             @endphp
             <article
-                class="home-hero__slide {{ $i === 0 ? 'is-active' : '' }} {{ $countClass }}"
+                class="home-hero__slide is-tone-{{ $tone }} {{ $i === 0 ? 'is-active' : '' }}"
                 data-hero-slide
                 data-slide-index="{{ $i }}"
+                data-hero-tone="{{ $tone }}"
+                style="--hero-focus: {{ $focus }};"
                 @unless ($i === 0)
                     aria-hidden="true"
                     inert
                 @endunless
             >
+                <div class="home-hero__scene" aria-hidden="true" data-hero-scene>
+                    <div class="home-hero__scene-mask" data-hero-scene-mask>
+                        <img
+                            class="home-hero__scene-image"
+                            @if ($i === 0)
+                                src="{{ $desktop }}"
+                                fetchpriority="high"
+                            @else
+                                data-src="{{ $desktop }}"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='{{ $w }}' height='{{ $h }}'%3E%3C/svg%3E"
+                            @endif
+                            alt=""
+                            width="{{ $w }}"
+                            height="{{ $h }}"
+                            decoding="{{ $i === 0 ? 'sync' : 'async' }}"
+                            data-hero-scene-image
+                            @if ($i === 0 && $desktop !== $mobile)
+                                data-mobile-src="{{ $mobile }}"
+                            @elseif ($i !== 0 && $desktop !== $mobile)
+                                data-mobile-src="{{ $mobile }}"
+                            @endif
+                        >
+                    </div>
+                </div>
+
+                <div class="home-hero__scrim" aria-hidden="true"></div>
+
                 <div class="home-hero__layout">
                     <div class="home-hero__copy" data-hero-copy>
                         @if (! empty($slide['eyebrow']))
@@ -71,39 +80,12 @@
                             </div>
                         @endif
                     </div>
-
-                    <div class="home-hero__stage" data-hero-stage aria-hidden="true">
-                        @foreach ($products as $pIndex => $product)
-                            <div
-                                class="home-hero__product home-hero__product--{{ $product['role'] ?? 'foreground' }}"
-                                data-hero-product
-                                data-depth="{{ $product['depth'] ?? 0.7 }}"
-                            >
-                                <div class="home-hero__product-enter" data-hero-enter>
-                                    <div class="home-hero__product-parallax" data-hero-parallax>
-                                        <img
-                                            @if ($i === 0)
-                                                src="{{ $product['src'] }}"
-                                                @if ($pIndex === 0) fetchpriority="high" @else fetchpriority="low" @endif
-                                            @else
-                                                data-src="{{ $product['src'] }}"
-                                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='{{ $product['width'] ?? 420 }}' height='{{ $product['height'] ?? 800 }}'%3E%3C/svg%3E"
-                                            @endif
-                                            alt="{{ $product['name'] }}"
-                                            width="{{ $product['width'] ?? 420 }}"
-                                            height="{{ $product['height'] ?? 800 }}"
-                                            decoding="async"
-                                        >
-                                        <span class="home-hero__contact-shadow" data-hero-shadow aria-hidden="true"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
                 </div>
+
+                <span class="sr-only">{{ $alt }}</span>
             </article>
         @empty
-            <article class="home-hero__slide is-active is-count-1" data-hero-slide>
+            <article class="home-hero__slide is-active is-tone-dark" data-hero-slide data-hero-tone="dark">
                 <div class="home-hero__layout">
                     <div class="home-hero__copy">
                         <h1 class="home-hero__title font-display">Supplify</h1>
@@ -118,7 +100,7 @@
     </div>
 
     @if ($slides->count() > 1)
-        <div class="home-hero__controls">
+        <div class="home-hero__controls" data-hero-controls>
             <button type="button" class="home-hero__nav-btn" data-hero-prev aria-label="Previous slide">
                 <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1-.02 1.06L8.832 10l3.938 3.71a.75.75 0 1 1-1.04 1.08l-4.5-4.25a.75.75 0 0 1 0-1.08l4.5-4.25a.75.75 0 0 1 1.06.02Z" clip-rule="evenodd"/></svg>
             </button>

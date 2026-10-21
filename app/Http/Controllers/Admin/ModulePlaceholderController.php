@@ -25,11 +25,6 @@ class ModulePlaceholderController extends Controller
                 'module' => '04',
                 'description' => 'Track stock quantities, low-stock alerts, and availability status.',
             ],
-            'customers' => [
-                'title' => 'Customers',
-                'module' => '08 / 12',
-                'description' => 'Browse customer profiles, contact details, and order history.',
-            ],
             'homepage' => [
                 'title' => 'Homepage content',
                 'module' => '06',
@@ -49,11 +44,6 @@ class ModulePlaceholderController extends Controller
                 'title' => 'Media',
                 'module' => '04 / 06',
                 'description' => 'Upload and organize product and content images with validation.',
-            ],
-            'settings' => [
-                'title' => 'Settings',
-                'module' => '19',
-                'description' => 'Store configuration, shipping rules, tax inputs, and basic site settings.',
             ],
         ];
 

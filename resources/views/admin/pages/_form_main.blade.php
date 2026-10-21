@@ -10,24 +10,17 @@
             <h2 class="admin-panel__title">Content</h2>
             <p class="admin-panel__intro">Page title and primary body copy.</p>
         </header>
-        <div class="admin-panel__body space-y-4">
-            <div>
-                <x-label for="title">Title</x-label>
-                <x-input id="title" name="title" :value="old('title', $page->title)" required />
-            </div>
-
-            <div>
-                <x-label for="body">Body</x-label>
-                <x-textarea id="body" name="body" rows="10">{{ old('body', $page->body) }}</x-textarea>
-                <p class="ui-help">
-                    @if ($page->isAboutPage())
-                        Legacy plain-text body is preserved and used as a fallback for the Purpose section when About fields are empty. The dedicated About template is driven by the sections below.
-                    @elseif ($page->isContactPage())
-                        The dedicated Contact template is driven by the sections below. The body field is not shown on the storefront Contact page.
-                    @else
-                        Plain text is fine. Line breaks are preserved on the storefront.
-                    @endif
-                </p>
+        <div class="admin-panel__body">
+            @php
+                $bodyHelp = $page->isAboutPage()
+                    ? 'Legacy plain-text body is preserved and used as a fallback for the Purpose section when About fields are empty. The dedicated About template is driven by the sections below.'
+                    : ($page->isContactPage()
+                        ? 'The dedicated Contact template is driven by the sections below. The body field is not shown on the storefront Contact page.'
+                        : 'Plain text is fine. Line breaks are preserved on the storefront.');
+            @endphp
+            <div class="admin-form-grid admin-form-grid--stack">
+                <x-input id="title" name="title" label="Title" :value="old('title', $page->title)" required />
+                <x-textarea id="body" name="body" label="Body" rows="10" :help="$bodyHelp">{{ old('body', $page->body) }}</x-textarea>
             </div>
         </div>
     </section>

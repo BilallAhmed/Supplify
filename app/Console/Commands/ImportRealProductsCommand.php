@@ -419,8 +419,8 @@ class ImportRealProductsCommand extends Command
         $updates = [];
         $map = [
             'OMG-1000' => 'SUP-VITAMIN-E-400IU-120',
-            'MAG-NITE' => 'SUP-CANDIDA-SUPPORT-180',
-            'GRN-DAILY' => 'SUP-VITAMIN-B50-COMPLEX-120',
+            'MAG-NITE' => 'SUP-MAGNESIUM-250MG-90',
+            'GRN-DAILY' => 'SUP-COQ10-200MG-120',
         ];
 
         $hero = HomepageSection::query()->where('key', 'hero')->first();
@@ -430,19 +430,26 @@ class ImportRealProductsCommand extends Command
             $changed = false;
             foreach ($slides as $i => $slide) {
                 $sku = $slide['product_sku'] ?? null;
-                if ($sku && isset($map[$sku])) {
-                    $newSku = $map[$sku];
-                    $product = Product::query()->where('sku', $newSku)->first();
-                    $slides[$i]['product_sku'] = $newSku;
-                    if ($product) {
-                        $slides[$i]['cta_url'] = '/products/'.$product->slug;
-                    }
+                if (! $sku) {
+                    continue;
+                }
+
+                $resolvedSku = $map[$sku] ?? $sku;
+                $product = Product::query()->where('sku', $resolvedSku)->first();
+                if (! $product) {
+                    continue;
+                }
+
+                if (($slides[$i]['product_sku'] ?? null) !== $resolvedSku
+                    || ($slides[$i]['cta_url'] ?? null) !== '/products/'.$product->slug) {
+                    $slides[$i]['product_sku'] = $resolvedSku;
+                    $slides[$i]['cta_url'] = '/products/'.$product->slug;
                     $changed = true;
                     $updates[] = [
                         'section' => 'hero',
                         'slide' => $i,
                         'from' => $sku,
-                        'to' => $newSku,
+                        'to' => $resolvedSku,
                     ];
                 }
             }

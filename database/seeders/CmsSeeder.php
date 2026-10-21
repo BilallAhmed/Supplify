@@ -4,64 +4,27 @@ namespace Database\Seeders;
 
 use App\Models\HomepageSection;
 use App\Models\Page;
+use App\Services\ContentService;
 use Illuminate\Database\Seeder;
 
 class CmsSeeder extends Seeder
 {
     public function run(): void
     {
+        $heroSlides = app(ContentService::class)->defaultHeroSlideDefinitions();
+        $heroFirst = $heroSlides[0];
+
         $sections = [
             [
                 'key' => 'hero',
-                'title' => 'Formulas you can read',
-                'subtitle' => 'US Supplement Co.',
-                'body' => 'Clean formulas. Clear labels. Built for people who take supplements seriously.',
-                'cta_label' => 'Shop catalog',
-                'cta_url' => '/shop',
+                'title' => $heroFirst['title'],
+                'subtitle' => $heroFirst['eyebrow'],
+                'body' => $heroFirst['body'],
+                'cta_label' => $heroFirst['cta_label'],
+                'cta_url' => $heroFirst['cta_url'],
+                'image_path' => $heroFirst['scene'],
                 'config' => [
-                    'secondary_cta_label' => 'Our approach',
-                    'secondary_cta_url' => '#approach',
-                    'slides' => [
-                        [
-                            'eyebrow' => 'Antioxidant support',
-                            'title' => 'Vitamin E 400 IU',
-                            'body' => 'D-alpha tocopherol for skin, cellular protection, and everyday antioxidant support — without the mystery blends.',
-                            'cta_label' => 'Shop Vitamin E',
-                            'cta_url' => '/shop',
-                            'secondary_cta_label' => 'Our approach',
-                            'secondary_cta_url' => '#approach',
-                            'product_sku' => 'SUP-VITAMIN-E-400IU-120',
-                            'theme' => 'cream',
-                            'accent' => '#00b883',
-                            'hero_image' => '/images/products/hero/vitamin-e.jpg',
-                        ],
-                        [
-                            'eyebrow' => 'Digestive balance',
-                            'title' => 'Candida Support',
-                            'body' => 'An advanced digestive balance formula for gut flora, wellness, and immune system support.',
-                            'cta_label' => 'Explore Candida Support',
-                            'cta_url' => '/shop',
-                            'secondary_cta_label' => 'Shop catalog',
-                            'secondary_cta_url' => '/shop',
-                            'product_sku' => 'SUP-CANDIDA-SUPPORT-180',
-                            'theme' => 'cream',
-                            'accent' => '#6cc34a',
-                            'hero_image' => '/images/products/hero/candida-support.jpg',
-                        ],
-                        [
-                            'eyebrow' => 'Energy & metabolism',
-                            'title' => 'Vitamin B-50 Complex',
-                            'body' => 'High-potency B vitamins for energy production, nervous system health, and metabolic function.',
-                            'cta_label' => 'Shop B-Complex',
-                            'cta_url' => '/shop',
-                            'secondary_cta_label' => 'Browse shop',
-                            'secondary_cta_url' => '/shop',
-                            'product_sku' => 'SUP-VITAMIN-B50-COMPLEX-120',
-                            'theme' => 'cream',
-                            'accent' => '#054648',
-                            'hero_image' => '/images/products/hero/vitamin-b50.jpg',
-                        ],
-                    ],
+                    'slides' => $heroSlides,
                 ],
                 'is_enabled' => true,
                 'sort_order' => 10,
@@ -77,7 +40,7 @@ class CmsSeeder extends Seeder
                     'items' => [
                         ['title' => 'Transparent labels', 'body' => 'Amounts you can verify at a glance.', 'icon' => 'label'],
                         ['title' => 'Thoughtful forms', 'body' => 'Ingredients chosen for clarity, not hype.', 'icon' => 'flask'],
-                        ['title' => 'US-focused fulfillment', 'body' => 'Shipping designed around domestic routines.', 'icon' => 'package'],
+                        ['title' => 'Careful fulfillment', 'body' => 'Orders prepared for reliable domestic delivery.', 'icon' => 'package'],
                     ],
                 ],
                 'is_enabled' => true,
@@ -149,7 +112,7 @@ class CmsSeeder extends Seeder
                         [
                             'label' => '04',
                             'title' => 'Packaging & delivery',
-                            'body' => 'Finished goods are packed for US-focused fulfillment and careful transit.',
+                            'body' => 'Finished goods are packed for careful transit to your door.',
                             'icon' => 'package',
                         ],
                     ],

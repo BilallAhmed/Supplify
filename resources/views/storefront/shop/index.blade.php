@@ -10,9 +10,115 @@
     $formAction = $activeCategory
         ? route('shop.category', $activeCategory->slug)
         : route('shop.index');
-    $resetUrl = $formAction;
     $inStockOnly = filter_var($filters['in_stock'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    $onSaleOnly = filter_var($filters['on_sale'] ?? false, FILTER_VALIDATE_BOOLEAN);
     $activeSort = $filters['sort'] ?? 'featured';
+    $searchQuery = trim((string) ($filters['q'] ?? ''));
+    $collection = trim((string) ($filters['collection'] ?? ''));
+    $publishedProductCount = $publishedProductCount ?? 0;
+    $priceRange = $priceRange ?? [
+        'min_price' => null,
+        'max_price' => null,
+        'min_cents' => null,
+        'max_cents' => null,
+        'error' => null,
+    ];
+    $minPriceInput = $priceRange['min_price'] ?? null;
+    $maxPriceInput = $priceRange['max_price'] ?? null;
+    $priceError = $priceRange['error'] ?? null;
+    $hasValidPriceFilter = $priceError === null
+        && (($priceRange['min_cents'] ?? null) !== null || ($priceRange['max_cents'] ?? null) !== null);
+
+    $shopParams = function (array $overrides = []) use ($activeSort, $inStockOnly, $onSaleOnly, $searchQuery, $collection, $minPriceInput, $maxPriceInput) {
+        $params = [
+            'q' => $searchQuery !== '' ? $searchQuery : null,
+            'sort' => $activeSort !== 'featured' ? $activeSort : null,
+            'in_stock' => $inStockOnly ? '1' : null,
+            'on_sale' => $onSaleOnly ? '1' : null,
+            'collection' => $collection !== '' ? $collection : null,
+            'min_price' => $minPriceInput,
+            'max_price' => $maxPriceInput,
+        ];
+
+        foreach ($overrides as $key => $value) {
+            if ($value === null) {
+                unset($params[$key]);
+            } else {
+                $params[$key] = $value;
+            }
+        }
+
+        return array_filter(
+            $params,
+            static fn ($value) => $value !== null && $value !== ''
+        );
+    };
+
+    $shopUrl = function (?\App\Models\Category $category = null, array $overrides = []) use ($shopParams) {
+        $params = $shopParams($overrides);
+
+        return $category
+            ? route('shop.category', array_merge(['category' => $category->slug], $params))
+            : route('shop.index', $params);
+    };
+
+    $clearAllUrl = route('shop.index');
+    $collectionLabels = [
+        'best-sellers' => 'Best sellers',
+        'trending' => 'Trending',
+        'offers' => 'Offers',
+    ];
+
+    $activeChips = [];
+    if ($activeCategory) {
+        $activeChips[] = [
+            'label' => $activeCategory->name,
+            'removeUrl' => $shopUrl(null),
+        ];
+    }
+    if ($searchQuery !== '') {
+        $activeChips[] = [
+            'label' => 'Search: '.$searchQuery,
+            'removeUrl' => $shopUrl($activeCategory, ['q' => null]),
+        ];
+    }
+    if ($inStockOnly) {
+        $activeChips[] = [
+            'label' => 'In stock',
+            'removeUrl' => $shopUrl($activeCategory, ['in_stock' => null]),
+        ];
+    }
+    if ($onSaleOnly) {
+        $activeChips[] = [
+            'label' => 'On sale',
+            'removeUrl' => $shopUrl($activeCategory, ['on_sale' => null]),
+        ];
+    }
+    if ($collection !== '') {
+        $activeChips[] = [
+            'label' => $collectionLabels[$collection] ?? ucfirst(str_replace('-', ' ', $collection)),
+            'removeUrl' => $shopUrl($activeCategory, ['collection' => null]),
+        ];
+    }
+    if ($hasValidPriceFilter || ($priceError && ($minPriceInput || $maxPriceInput))) {
+        $chipLabel = match (true) {
+            $minPriceInput && $maxPriceInput => 'PKR '.$minPriceInput.' – '.$maxPriceInput,
+            $minPriceInput => 'PKR '.$minPriceInput.'+',
+            default => 'Up to PKR '.$maxPriceInput,
+        };
+        $activeChips[] = [
+            'label' => $chipLabel,
+            'removeUrl' => $shopUrl($activeCategory, ['min_price' => null, 'max_price' => null]),
+        ];
+    }
+
+    $activeFilterCount = count($activeChips);
+    $hasActiveFilters = $activeFilterCount > 0;
+    $resultsLabel = $products->total() === 0
+        ? '0 products'
+        : ($products->firstItem() === $products->lastItem()
+            ? $products->firstItem().' of '.$products->total().' '.\Illuminate\Support\Str::plural('product', $products->total())
+            : $products->firstItem().'–'.$products->lastItem().' of '.$products->total().' products');
 @endphp
 
 @section('title', $pageTitle)
@@ -20,38 +126,27 @@
 @section('canonical', $canonical)
 
 @section('content')
-    <section class="border-b border-line/60 bg-gradient-to-b from-brand-mist/50 to-surface-muted" aria-labelledby="shop-heading">
-        <x-container class="py-8 sm:py-10">
-            <nav class="mb-3 text-sm text-ink-muted" aria-label="Breadcrumb">
-                <ol class="flex flex-wrap items-center gap-2">
-                    <li><a href="{{ route('home') }}" class="hover:text-brand">Home</a></li>
-                    <li aria-hidden="true">/</li>
-                    @if ($activeCategory)
-                        <li><a href="{{ route('shop.index') }}" class="hover:text-brand">Shop</a></li>
-                        <li aria-hidden="true">/</li>
-                        <li class="font-medium text-ink" aria-current="page">{{ $activeCategory->name }}</li>
-                    @else
-                        <li class="font-medium text-ink" aria-current="page">Shop</li>
-                    @endif
-                </ol>
-            </nav>
-
-            <h1 id="shop-heading" class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-                {{ $heading }}
-            </h1>
-            <p class="mt-2 max-w-2xl text-sm text-ink-muted sm:text-base">{{ $subheading }}</p>
-        </x-container>
-    </section>
+    <x-page-image-banner
+        image="images/catalog/catalog-hero.webp"
+        image-alt="Supplify supplements displayed on natural stone stands"
+        :eyebrow="$eyebrow ?? null"
+        :title="$heading"
+        :description="$subheading"
+        heading-id="shop-heading"
+        :current-label="$activeCategory?->name ?? 'All Products'"
+        :category="$activeCategory"
+    />
 
     <x-container
-        class="py-8 lg:py-10"
-        x-data="{ filtersOpen: false }"
-        @keydown.escape.window="filtersOpen = false"
+        class="shop-catalog py-8 lg:py-10"
+        x-data="shopCatalogFilters()"
+        @keydown.escape.window="closeFilters()"
     >
         <div
             class="shop-filters-backdrop"
-            :class="filtersOpen && 'is-open'"
-            @click="filtersOpen = false"
+            :class="open && 'is-open'"
+            @click="closeFilters()"
+            x-cloak
             aria-hidden="true"
         ></div>
 
@@ -59,129 +154,256 @@
             <aside
                 id="shop-filters"
                 class="shop-filters"
-                :class="filtersOpen && 'is-open'"
+                :class="open && 'is-open'"
+                x-ref="drawer"
                 aria-label="Catalog filters"
+                @keydown="trapFocus($event)"
             >
-                <div class="mb-4 flex items-center justify-between gap-3 lg:mb-0">
-                    <h2 class="shop-filters__title lg:mb-4">Filters</h2>
+                <div class="shop-filters__header">
+                    <div class="shop-filters__heading-row">
+                        <h2 class="shop-filters__title" id="shop-filters-title">Filters</h2>
+                        @if ($hasActiveFilters)
+                            <a href="{{ $clearAllUrl }}" class="shop-filters__clear">Clear all</a>
+                        @endif
+                    </div>
                     <button
                         type="button"
-                        class="inline-flex items-center justify-center rounded-[var(--radius-control)] border border-line p-2 text-ink lg:hidden"
-                        @click="filtersOpen = false"
+                        class="shop-filters__close"
+                        @click="closeFilters()"
+                        x-ref="closeBtn"
                         aria-label="Close filters"
                     >
-                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
                         </svg>
                     </button>
                 </div>
 
-                <div class="shop-filters__section">
-                    <p class="shop-filters__label">Category</p>
-                    <nav class="shop-cat" aria-label="Product categories">
-                        <a
-                            href="{{ route('shop.index', array_filter(['q' => $filters['q'] ?? null, 'sort' => $activeSort !== 'featured' ? $activeSort : null, 'in_stock' => $inStockOnly ? '1' : null])) }}"
-                            class="shop-cat__link {{ $activeCategory ? '' : 'is-active' }}"
+                <div class="shop-filters__body">
+                    <div class="shop-filters__section" x-data="{ expanded: true }">
+                        <button
+                            type="button"
+                            class="shop-filters__group-toggle"
+                            @click="expanded = !expanded"
+                            :aria-expanded="expanded.toString()"
+                            aria-controls="shop-filter-categories"
                         >
-                            <span>All products</span>
-                            <span class="shop-cat__count">{{ $categories->sum('published_products_count') }}</span>
-                        </a>
-                        @foreach ($categories as $category)
+                            <span class="shop-filters__label">Category</span>
+                            <svg class="shop-filters__chevron" :class="expanded && 'is-open'" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <nav
+                            id="shop-filter-categories"
+                            class="shop-cat"
+                            aria-label="Product categories"
+                            x-show="expanded"
+                        >
                             <a
-                                href="{{ route('shop.category', array_filter(['category' => $category->slug, 'q' => $filters['q'] ?? null, 'sort' => $activeSort !== 'featured' ? $activeSort : null, 'in_stock' => $inStockOnly ? '1' : null])) }}"
-                                class="shop-cat__link {{ $activeCategory?->is($category) ? 'is-active' : '' }}"
+                                href="{{ $shopUrl(null) }}"
+                                class="shop-cat__link {{ $activeCategory ? '' : 'is-active' }}"
+                                @if (! $activeCategory) aria-current="page" @endif
                             >
-                                <span>{{ $category->name }}</span>
-                                @if (isset($category->published_products_count))
-                                    <span class="shop-cat__count">{{ $category->published_products_count }}</span>
-                                @endif
+                                <span class="shop-cat__name">All products</span>
+                                <span class="shop-cat__count">{{ $publishedProductCount }}</span>
                             </a>
-                        @endforeach
-                    </nav>
+                            @foreach ($categories as $category)
+                                <a
+                                    href="{{ $shopUrl($category) }}"
+                                    class="shop-cat__link {{ $activeCategory?->is($category) ? 'is-active' : '' }}"
+                                    @if ($activeCategory?->is($category)) aria-current="page" @endif
+                                >
+                                    <span class="shop-cat__name">{{ $category->name }}</span>
+                                    @if (isset($category->published_products_count))
+                                        <span class="shop-cat__count">{{ $category->published_products_count }}</span>
+                                    @endif
+                                </a>
+                            @endforeach
+                        </nav>
+                    </div>
+
+                    {{-- Instant-apply availability: toggling submits immediately (no separate Apply). --}}
+                    <div class="shop-filters__section" x-data="{ expanded: true }">
+                        <button
+                            type="button"
+                            class="shop-filters__group-toggle"
+                            @click="expanded = !expanded"
+                            :aria-expanded="expanded.toString()"
+                            aria-controls="shop-filter-availability"
+                        >
+                            <span class="shop-filters__label">Availability</span>
+                            <svg class="shop-filters__chevron" :class="expanded && 'is-open'" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div id="shop-filter-availability" x-show="expanded">
+                            <form method="GET" action="{{ $formAction }}" class="shop-avail-form">
+                                @foreach ($shopParams(['in_stock' => null]) as $name => $value)
+                                    <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                                @endforeach
+                                <label class="shop-check" for="shop-in-stock">
+                                    <input
+                                        id="shop-in-stock"
+                                        class="shop-check__input"
+                                        type="checkbox"
+                                        name="in_stock"
+                                        value="1"
+                                        @checked($inStockOnly)
+                                        onchange="this.form.submit()"
+                                    >
+                                    <span class="shop-check__mark" aria-hidden="true"></span>
+                                    <span class="shop-check__label">In stock only</span>
+                                </label>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="shop-filters__section" x-data="{ expanded: true }">
+                        <button
+                            type="button"
+                            class="shop-filters__group-toggle"
+                            @click="expanded = !expanded"
+                            :aria-expanded="expanded.toString()"
+                            aria-controls="shop-filter-price"
+                        >
+                            <span class="shop-filters__label">Price</span>
+                            <svg class="shop-filters__chevron" :class="expanded && 'is-open'" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div id="shop-filter-price" x-show="expanded">
+                            <form
+                                method="GET"
+                                action="{{ $formAction }}"
+                                class="shop-price-form"
+                                data-shop-price-form
+                            >
+                                @foreach ($shopParams(['min_price' => null, 'max_price' => null]) as $name => $value)
+                                    <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                                @endforeach
+                                <div class="shop-price-fields">
+                                    <div class="shop-price-field">
+                                        <label class="shop-price-field__label" for="shop-min-price">Min (PKR)</label>
+                                        <input
+                                            id="shop-min-price"
+                                            class="shop-control shop-control--price{{ $priceError ? ' is-invalid' : '' }}"
+                                            type="number"
+                                            name="min_price"
+                                            inputmode="decimal"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="0"
+                                            value="{{ $minPriceInput }}"
+                                            aria-invalid="{{ $priceError ? 'true' : 'false' }}"
+                                            @if ($priceError) aria-describedby="shop-price-error" @endif
+                                        >
+                                    </div>
+                                    <div class="shop-price-field">
+                                        <label class="shop-price-field__label" for="shop-max-price">Max (PKR)</label>
+                                        <input
+                                            id="shop-max-price"
+                                            class="shop-control shop-control--price{{ $priceError ? ' is-invalid' : '' }}"
+                                            type="number"
+                                            name="max_price"
+                                            inputmode="decimal"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="Any"
+                                            value="{{ $maxPriceInput }}"
+                                            aria-invalid="{{ $priceError ? 'true' : 'false' }}"
+                                            @if ($priceError) aria-describedby="shop-price-error" @endif
+                                        >
+                                    </div>
+                                </div>
+                                <p
+                                    id="shop-price-error"
+                                    class="shop-price-error"
+                                    role="alert"
+                                    @if ($priceError) data-server-error="1" @endif
+                                    @if (! $priceError) hidden @endif
+                                >{{ $priceError }}</p>
+                                <button type="submit" class="shop-control shop-control--btn shop-price-form__apply">
+                                    Apply price
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
-                <form method="GET" action="{{ $formAction }}" class="shop-filters__section space-y-4">
-                    @if (! empty($filters['q']))
-                        <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                <div class="shop-filters__footer">
+                    @if ($hasActiveFilters)
+                        <a href="{{ $clearAllUrl }}" class="shop-filters__footer-clear">Clear all</a>
                     @endif
-                    @if ($activeSort !== 'featured')
-                        <input type="hidden" name="sort" value="{{ $activeSort }}">
-                    @endif
-                    @if (! empty($filters['collection']))
-                        <input type="hidden" name="collection" value="{{ $filters['collection'] }}">
-                    @endif
-                    @if (filter_var($filters['on_sale'] ?? false, FILTER_VALIDATE_BOOLEAN))
-                        <input type="hidden" name="on_sale" value="1">
-                    @endif
-
-                    <div>
-                        <p class="shop-filters__label">Availability</p>
-                        <label for="shop-in-stock" class="flex cursor-pointer items-center gap-3 rounded-[var(--radius-control)] px-1 py-1">
-                            <input
-                                id="shop-in-stock"
-                                type="checkbox"
-                                name="in_stock"
-                                value="1"
-                                class="size-4 rounded border-line text-brand focus:ring-brand/30"
-                                @checked($inStockOnly)
-                                onchange="this.form.submit()"
-                            >
-                            <span class="text-sm text-ink">In stock only</span>
-                        </label>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <x-button type="submit" variant="primary" size="sm">Apply</x-button>
-                        <x-button href="{{ $resetUrl }}" variant="ghost" size="sm">Reset</x-button>
-                    </div>
-                </form>
+                    <button type="button" class="shop-filters__done" @click="closeFilters()">
+                        View results
+                        <span class="shop-filters__done-count">({{ $products->total() }})</span>
+                    </button>
+                </div>
             </aside>
 
-            <div>
-                <form method="GET" action="{{ $formAction }}" class="shop-toolbar">
+            <div class="shop-results">
+                <form method="GET" action="{{ $formAction }}" class="shop-toolbar" role="search">
                     @if ($inStockOnly)
                         <input type="hidden" name="in_stock" value="1">
                     @endif
-                    @if (! empty($filters['collection']))
-                        <input type="hidden" name="collection" value="{{ $filters['collection'] }}">
-                    @endif
-                    @if (filter_var($filters['on_sale'] ?? false, FILTER_VALIDATE_BOOLEAN))
+                    @if ($onSaleOnly)
                         <input type="hidden" name="on_sale" value="1">
                     @endif
+                    @if ($collection !== '')
+                        <input type="hidden" name="collection" value="{{ $collection }}">
+                    @endif
+                    @if ($minPriceInput !== null)
+                        <input type="hidden" name="min_price" value="{{ $minPriceInput }}">
+                    @endif
+                    @if ($maxPriceInput !== null)
+                        <input type="hidden" name="max_price" value="{{ $maxPriceInput }}">
+                    @endif
 
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="shop-toolbar__lead">
                         <button
                             type="button"
-                            class="shop-filters-toggle inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-line bg-surface-elevated px-3 py-2 text-sm font-medium text-ink hover:border-brand hover:text-brand"
-                            @click="filtersOpen = true"
-                            :aria-expanded="filtersOpen.toString()"
+                            class="shop-filters-toggle"
+                            @click="openFilters()"
+                            :aria-expanded="open.toString()"
                             aria-controls="shop-filters"
                         >
-                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M2.628 1.501c-.46-.046-.893.287-.993.745L.78 6.25a.75.75 0 0 0 .75.75h16.94a.75.75 0 0 0 .75-.75l-.854-4.004a.75.75 0 0 0-.993-.745A48.1 48.1 0 0 0 10 1c-2.476 0-4.908.17-7.372.501ZM1.5 8.5v8.75A1.75 1.75 0 0 0 3.25 19h13.5A1.75 1.75 0 0 0 18.5 17.25V8.5h-17Z" clip-rule="evenodd"/>
                             </svg>
-                            Filters
+                            <span>Filters</span>
+                            @if ($activeFilterCount > 0)
+                                <span class="shop-filters-toggle__badge">{{ $activeFilterCount }}</span>
+                            @endif
                         </button>
-                        <p class="shop-toolbar__meta">
-                            <span class="font-medium text-ink">{{ $products->total() }}</span>
-                            {{ \Illuminate\Support\Str::plural('product', $products->total()) }}
-                        </p>
+                        <p class="shop-toolbar__meta" aria-live="polite">{{ $resultsLabel }}</p>
                     </div>
 
                     <div class="shop-toolbar__controls">
                         <div class="shop-toolbar__search">
                             <label for="shop-q" class="sr-only">Search products</label>
-                            <x-input
+                            <span class="shop-toolbar__search-icon" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
+                                </svg>
+                            </span>
+                            <input
                                 id="shop-q"
+                                class="shop-control shop-control--search"
                                 name="q"
                                 type="search"
-                                value="{{ $filters['q'] ?? '' }}"
-                                placeholder="Search catalog"
-                            />
+                                value="{{ $searchQuery }}"
+                                placeholder="Search products"
+                                autocomplete="off"
+                            >
                         </div>
                         <div class="shop-toolbar__sort">
                             <label for="shop-sort" class="sr-only">Sort products</label>
-                            <x-select id="shop-sort" name="sort" onchange="this.form.submit()">
+                            <select
+                                id="shop-sort"
+                                class="shop-control shop-control--select"
+                                name="sort"
+                                onchange="this.form.submit()"
+                            >
                                 @foreach ([
                                     'featured' => 'Featured',
                                     'newest' => 'Newest',
@@ -193,29 +415,46 @@
                                         {{ $label }}
                                     </option>
                                 @endforeach
-                            </x-select>
+                            </select>
                         </div>
-                        <x-button type="submit" variant="outline" size="sm">Search</x-button>
+                        <button type="submit" class="shop-control shop-control--btn">Search</button>
                     </div>
                 </form>
 
+                @if ($hasActiveFilters)
+                    <div class="shop-chips" aria-label="Active filters">
+                        @foreach ($activeChips as $chip)
+                            <a href="{{ $chip['removeUrl'] }}" class="shop-chip">
+                                <span>{{ $chip['label'] }}</span>
+                                <span class="shop-chip__remove" aria-hidden="true">
+                                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
+                                    </svg>
+                                </span>
+                                <span class="sr-only">Remove {{ $chip['label'] }} filter</span>
+                            </a>
+                        @endforeach
+                        <a href="{{ $clearAllUrl }}" class="shop-chips__clear">Clear all</a>
+                    </div>
+                @endif
+
                 @if ($products->isEmpty())
-                    <div class="rounded-[var(--radius-panel)] border border-dashed border-line bg-surface-elevated px-6 py-16 text-center">
-                        <p class="font-display text-xl font-bold text-ink">No products found</p>
-                        <p class="mt-2 text-sm text-ink-muted">Try clearing filters or browsing another category.</p>
-                        <div class="mt-6">
-                            <x-button href="{{ route('shop.index') }}" variant="outline">View all products</x-button>
+                    <div class="shop-empty" role="status">
+                        <p class="shop-empty__title font-display">No products match these filters</p>
+                        <p class="shop-empty__copy">Try clearing a filter, adjusting your search, or browsing the full catalog.</p>
+                        <div class="shop-empty__actions">
+                            <a href="{{ $clearAllUrl }}" class="shop-control shop-control--btn shop-control--btn-primary">Clear all filters</a>
                         </div>
                     </div>
                 @else
-                    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="shop-grid">
                         @foreach ($products as $product)
                             <x-product-card :product="$product" />
                         @endforeach
                     </div>
 
-                    <div class="mt-10">
-                        {{ $products->links() }}
+                    <div class="shop-pagination">
+                        {{ $products->links('pagination.shop') }}
                     </div>
                 @endif
             </div>

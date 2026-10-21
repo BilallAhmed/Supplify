@@ -26,6 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
 
+        // Set by the storefront consent banner (plain JSON); must not be encrypted.
+        $middleware->encryptCookies(except: [
+            'supplify_consent',
+        ]);
+
         $middleware->append(\App\Http\Middleware\PreventBrowserCache::class);
 
         $middleware->redirectGuestsTo(fn () => route('login'));

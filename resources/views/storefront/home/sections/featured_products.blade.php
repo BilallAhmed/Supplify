@@ -1,47 +1,38 @@
-<section class="home-featured" aria-labelledby="featured-heading" data-home-featured>
+<section class="home-featured collection-editorial" aria-labelledby="featured-heading" data-home-featured>
     <x-container>
-        <div class="home-featured__head" data-reveal="left">
-            <x-section-heading
-                id="featured-heading"
-                :eyebrow="$section->subtitle"
-                :title="$section->title ?: 'Featured formulas'"
-                :description="$section->body"
-            />
-
-            @if ($featuredProducts->isNotEmpty())
-                <div class="home-featured__controls">
-                    <a
-                        href="{{ url($section->cta_url ?: '/shop') }}"
-                        class="home-featured__all"
-                    >{{ $section->cta_label ?: 'View All Products' }}</a>
-                    <div class="home-featured__nav" role="group" aria-label="Featured products controls">
-                        <button type="button" class="home-featured__arrow" data-featured-prev aria-label="Previous products">
-                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1-.02 1.06L8.832 10l3.938 3.71a.75.75 0 1 1-1.04 1.08l-4.5-4.25a.75.75 0 0 1 0-1.08l4.5-4.25a.75.75 0 0 1 1.06.02Z" clip-rule="evenodd"/></svg>
-                        </button>
-                        <button type="button" class="home-featured__arrow" data-featured-next aria-label="Next products">
-                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clip-rule="evenodd"/></svg>
-                        </button>
-                    </div>
-                </div>
-            @endif
-        </div>
+        <header class="collection-editorial__head">
+            <div><p class="editorial-kicker">{{ $section->subtitle ?: 'The collection' }}</p><h2 id="featured-heading">{{ $section->title ?: 'Featured formulas' }}</h2>@if ($section->body)<p class="collection-editorial__description">{{ $section->body }}</p>@endif</div>
+            <div class="collection-editorial__aside">
+                <x-view-all-products />
+                @if ($featuredProducts->isNotEmpty())<div class="collection-editorial__arrows" role="group" aria-label="Featured products controls"><button type="button" data-featured-prev aria-label="Previous products" aria-controls="featured-product-rail"><span class="collection-editorial__prev"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button><button type="button" data-featured-next aria-label="Next products" aria-controls="featured-product-rail"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>@endif
+            </div>
+        </header>
     </x-container>
-
-    @if ($featuredProducts->isEmpty())
-        <x-container>
-            <p class="mt-8 text-sm text-ink-muted">Mark products as featured in admin to show them here.</p>
-        </x-container>
-    @else
-        <div class="home-featured__viewport" data-featured-viewport tabindex="0" aria-label="Featured products carousel">
-            <div class="home-featured__track" data-featured-track>
-                @foreach ($featuredProducts as $i => $product)
-                    <x-product-tile
-                        :product="$product"
-                        variant="featured"
-                        class="home-featured__card {{ $i === 0 ? 'is-active' : '' }}"
-                    />
+    @if ($featuredProducts->isNotEmpty())
+        <div class="collection-editorial__viewport" data-featured-viewport id="featured-product-rail" tabindex="0" aria-label="Featured products carousel" aria-describedby="featured-rail-hint">
+            <div class="collection-editorial__track" data-featured-track>
+                @foreach ($featuredProducts as $product)
+                    @php $image = $product->primaryImage(); $secondaryImage = $product->galleryImages()->first(); $href = route('products.show', $product->slug); @endphp
+                    <article class="collection-product" data-featured-card data-product-id="{{ $product->id }}">
+                        <header class="collection-product__heading"><h3><a href="{{ $href }}">{{ $product->name }}</a></h3>
+                            <button class="collection-product__save" type="button" data-product-action="wishlist" data-product-id="{{ $product->id }}" data-product-name="{{ $product->name }}" aria-pressed="false" aria-label="Save {{ $product->name }} to favorites"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 20s-7-4.4-7-9.2A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7 3.6C19 15.6 12 20 12 20Z"/></svg></button>
+                        </header>
+                        <a class="collection-product__scene" href="{{ $href }}" aria-label="{{ $product->name }}" data-featured-media>
+                            <span class="collection-product__halo" aria-hidden="true"></span>
+                            <img class="home-featured__img home-featured__img--primary" src="{{ $image?->url() ?? $product->displayImageUrl() }}" alt="{{ $image?->alt ?: $product->name }}" width="480" height="640" loading="lazy" decoding="async">
+                            @if ($secondaryImage && $secondaryImage->url() !== ($image?->url() ?? $product->displayImageUrl()))
+                                <img class="home-featured__img home-featured__img--secondary" src="{{ $secondaryImage->url() }}" alt="{{ $secondaryImage->alt ?: ($product->name.' â€” alternate view') }}" width="480" height="640" loading="lazy" decoding="async" data-hover-secondary>
+                            @endif
+                        </a>
+                        <footer class="collection-product__footer"><div><span>Explore the formula</span><strong>{{ $product->effectivePriceFormatted() }}</strong></div></footer>
+                        <x-formula-actions :product="$product" />
+                    </article>
                 @endforeach
             </div>
         </div>
-    @endif
+        <x-container class="collection-editorial__navigation">
+            <p id="featured-rail-hint" class="sr-only" data-featured-hint>Swipe or drag to explore</p>
+            <div class="collection-editorial__meter" aria-hidden="true"><span data-featured-progress></span></div>
+        </x-container>
+    @else <x-container><p>Featured formulas will be available soon.</p></x-container> @endif
 </section>

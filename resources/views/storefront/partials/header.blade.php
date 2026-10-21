@@ -12,7 +12,7 @@
 @endphp
 
 <header
-    class="site-header sticky top-0 z-40{{ request()->routeIs('home') ? ' is-over-hero' : '' }}"
+    class="site-header sticky top-0 z-40{{ request()->routeIs('home') ? ' is-over-hero is-hero-dark' : '' }}"
     x-data="siteHeader(@js(route('search')))"
     :class="{ 'is-scrolled': scrolled, 'is-open': mobileOpen, 'is-searching': searchOpen }"
     @keydown.escape.window="
@@ -26,10 +26,19 @@
                 <img
                     src="{{ asset('images/supplify-logo-dark.webp') }}"
                     alt="{{ config('app.name') }}"
-                    class="site-header__logo"
+                    class="site-header__logo site-header__logo--on-dark"
                     width="220"
                     height="48"
                     decoding="async"
+                >
+                <img
+                    src="{{ asset('images/supplify-logo-light.webp') }}"
+                    alt=""
+                    class="site-header__logo site-header__logo--on-light"
+                    width="220"
+                    height="48"
+                    decoding="async"
+                    aria-hidden="true"
                 >
             </a>
 

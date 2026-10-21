@@ -1,6 +1,6 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { prefersReducedMotion, hasFinePointer } from './smooth-scroll';
+import { prefersReducedMotion, hasFinePointer } from './motion-prefs';
 
 gsap.registerPlugin(ScrollTrigger);
 

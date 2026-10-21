@@ -20,7 +20,70 @@ class BlogService
     /**
      * @param  array{q?: string, category?: string, tag?: string, per_page?: int}  $filters
      */
-    public function paginatePublished(array $filters = []): LengthAwarePaginator
+    public function paginatePublished(array $filters = [], ?int $excludeId = null): LengthAwarePaginator
+    {
+        $query = $this->publishedListingQuery($filters);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query
+            ->latest('published_at')
+            ->orderByDesc('id')
+            ->paginate((int) ($filters['per_page'] ?? 9))
+            ->withQueryString();
+    }
+
+    /**
+     * Featured story for the unfiltered journal landing page.
+     * Prefers an explicitly featured published post; otherwise the latest article.
+     */
+    public function featuredForListing(array $filters = []): ?Post
+    {
+        if ($this->listingHasActiveFilters($filters)) {
+            return null;
+        }
+
+        $featured = Post::query()
+            ->published()
+            ->where('is_featured', true)
+            ->with(['category:id,name,slug'])
+            ->latest('published_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($featured) {
+            return $featured;
+        }
+
+        return Post::query()
+            ->published()
+            ->with(['category:id,name,slug'])
+            ->latest('published_at')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * @param  array{q?: string, category?: string, tag?: string}  $filters
+     */
+    public function listingHasActiveFilters(array $filters): bool
+    {
+        return filled($filters['q'] ?? null)
+            || filled($filters['category'] ?? null)
+            || filled($filters['tag'] ?? null);
+    }
+
+    public function publishedMatchingCount(array $filters = []): int
+    {
+        return $this->publishedListingQuery($filters)->count();
+    }
+
+    /**
+     * @param  array{q?: string, category?: string, tag?: string}  $filters
+     */
+    private function publishedListingQuery(array $filters = []): Builder
     {
         $query = Post::query()
             ->published()
@@ -49,10 +112,7 @@ class BlogService
             );
         }
 
-        return $query
-            ->latest('published_at')
-            ->paginate((int) ($filters['per_page'] ?? 9))
-            ->withQueryString();
+        return $query;
     }
 
     public function findPublished(string $slug): Post
@@ -136,6 +196,8 @@ class BlogService
      */
     public function save(Post $post, array $data, ?UploadedFile $image = null, ?int $authorId = null): Post
     {
+        $isFeatured = (bool) ($data['is_featured'] ?? false);
+
         $post->fill([
             'title' => $data['title'],
             'slug' => filled($data['slug'] ?? null)
@@ -147,6 +209,7 @@ class BlogService
             'seo_title' => $data['seo_title'] ?? null,
             'seo_description' => $data['seo_description'] ?? null,
             'is_published' => (bool) ($data['is_published'] ?? false),
+            'is_featured' => $isFeatured,
         ]);
 
         if (array_key_exists('featured_image', $data) && ! $image) {
@@ -163,6 +226,13 @@ class BlogService
         }
 
         $post->save();
+
+        if ($isFeatured) {
+            Post::query()
+                ->where('id', '!=', $post->id)
+                ->where('is_featured', true)
+                ->update(['is_featured' => false]);
+        }
 
         if ($image) {
             $post->featured_image = $this->media->storePostImage($image, $post->id);

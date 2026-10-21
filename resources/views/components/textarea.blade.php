@@ -4,25 +4,28 @@
     'help' => null,
     'error' => null,
     'rows' => 4,
+    'required' => false,
 ])
 
 @php
     $id = $attributes->get('id') ?? ($name ? str_replace(['[', ']'], ['-', ''], $name) : 'textarea-'.uniqid());
     $hasError = filled($error) || ($name && $errors->has($name));
     $errorMessage = $error ?? ($name ? $errors->first($name) : null);
+    $isRequired = $required || $attributes->has('required');
 @endphp
 
-<div class="w-full">
+<div {{ $attributes->only('class')->merge(['class' => 'ui-field ui-field--full']) }}>
     @if ($label)
-        <x-label :for="$id" :value="$label" />
+        <x-label :for="$id" :value="$label" :required="$isRequired" />
     @endif
 
     <textarea
         id="{{ $id }}"
         @if ($name) name="{{ $name }}" @endif
         rows="{{ $rows }}"
-        {{ $attributes->merge([
-            'class' => 'ui-input min-h-24'.($hasError ? ' ui-input-error' : ''),
+        @if ($isRequired) required @endif
+        {{ $attributes->except(['class', 'required'])->merge([
+            'class' => 'ui-input ui-textarea'.($hasError ? ' ui-input-error' : ''),
         ]) }}
     >{{ $slot }}</textarea>
 

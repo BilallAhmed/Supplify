@@ -106,39 +106,6 @@
             </div>
         </div>
 
-        <div class="product-tile__actions">
-            <button
-                type="button"
-                class="product-tile__btn product-tile__btn--secondary"
-                data-product-action="quick-view"
-                data-product-slug="{{ $product->slug }}"
-            >
-                Quick View
-            </button>
-
-            @if ($canAdd)
-                <button
-                    type="button"
-                    class="product-tile__btn product-tile__btn--primary"
-                    data-product-action="add-to-cart"
-                    data-product-id="{{ $product->id }}"
-                >
-                    Add to Cart
-                </button>
-            @elseif ($isVariable && ! $temporary)
-                <button
-                    type="button"
-                    class="product-tile__btn product-tile__btn--primary"
-                    data-product-action="quick-view"
-                    data-product-slug="{{ $product->slug }}"
-                >
-                    Select options
-                </button>
-            @else
-                <a href="{{ $href }}" class="product-tile__btn product-tile__btn--primary">
-                    View product
-                </a>
-            @endif
-        </div>
+        <x-formula-actions :product="$product" />
     </div>
 </article>

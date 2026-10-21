@@ -12,7 +12,7 @@
     aria-labelledby="education-heading"
 >
     <x-container>
-        <header class="home-education__intro" data-reveal="up">
+        <header class="home-education__intro">
             @if ($section->subtitle)
                 <p class="home-education__eyebrow">{{ $section->subtitle }}</p>
             @endif

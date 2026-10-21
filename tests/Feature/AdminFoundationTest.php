@@ -57,6 +57,7 @@ class AdminFoundationTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.settings.edit'))
             ->assertOk()
-            ->assertSee('Settings', false);
+            ->assertSee('Settings', false)
+            ->assertSee('Save settings', false);
     }
 }

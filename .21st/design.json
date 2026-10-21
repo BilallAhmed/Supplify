@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "project": {
+    "name": "supplement",
+    "productType": "Supplement ecommerce storefront",
+    "stack": [
+      "tailwind-v4",
+      "vite"
+    ]
+  },
+  "sources": {
+    "tokens": [],
+    "components": [],
+    "assets": [
+      "public/images"
+    ],
+    "instructions": []
+  },
+  "design": {
+    "colorMode": "unknown",
+    "colors": {
+      "paper": "#f6f5ef",
+      "ink": "#163c37",
+      "accent": "#ccdfad",
+      "signature": "#123d35"
+    },
+    "typography": {
+      "primary": "Figtree",
+      "heading": "Plus Jakarta Sans",
+      "headingWeight": 700
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {},
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [
+      "Laravel Blade templates",
+      "GSAP native-scroll animation",
+      "Preserve product data and shopping actions",
+      "Reduced-motion fallback"
+    ],
+    "avoid": []
+  },
+  "decisions": [
+    {
+      "id": "supplify-blog-journal",
+      "direction": "Editorial wellness journal listing",
+      "references": [],
+      "implementation": "Blade journal with preserved page-banner--journal contrast, featured lead story, chip category nav, 16:10 article cards, shared shop pager tokens, exclusive is_featured admin flag"
+    },
+    {
+      "id": "supplify-shop-catalog",
+      "direction": "Refined wellness ecommerce catalog",
+      "references": [],
+      "implementation": "Blade + Alpine shop with ~280px sticky filter drawer, instant-apply filters, active chips, 44px control scale, product-card commerce actions; warm white / soft mint / deep teal tokens from app.css"
+    },
+    {
+      "id": "supplify-editorial-collection",
+      "direction": "Editorial wellness commerce",
+      "references": [
+        "https://seed.com/",
+        "https://www.drinkpoppi.com/",
+        "https://21st.dev/@Loomix/components/cinematic-product-scroll-section",
+        "https://21st.dev/@pulkitxm/components/horizontal-scroll-gallery"
+      ],
+      "implementation": "Native Blade and GSAP adaptation; coherent paper canvas, lifestyle directory, pinned horizontal collection, single cinematic dark spotlight"
+    },
+    {
+      "id": "supplify-routine-campaign",
+      "direction": "Campaign-led merchandising between product collections",
+      "references": [
+        "https://www.nutrifactor.com.pk/",
+        "https://mysupplementandmore.com/"
+      ],
+      "implementation": "Own local product compositions, accessible two-scene campaign, visible section mask and typography reveals. Approved rail and fonts preserved."
+    }
+  ],
+  "evidence": [
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:vite",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-10-21T15:13:29.430Z"
+}

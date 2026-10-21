@@ -97,9 +97,9 @@
 
             <main id="admin-main" class="flex-1 px-4 py-6 lg:px-6">
                 @hasSection('page_header')
-                    <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+                    <header class="admin-page-header">
                         @yield('page_header')
-                    </div>
+                    </header>
                 @endif
 
                 @yield('content')

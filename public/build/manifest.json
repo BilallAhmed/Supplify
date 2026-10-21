@@ -1,14 +1,14 @@
 {
-  "_fit-product-cutout-B84hcuYd.js": {
-    "file": "assets/fit-product-cutout-B84hcuYd.js",
+  "_fit-product-cutout-DN5pYg0Q.js": {
+    "file": "assets/fit-product-cutout-DN5pYg0Q.js",
     "name": "fit-product-cutout"
   },
-  "_smooth-scroll-CpTsgMfL.js": {
-    "file": "assets/smooth-scroll-CpTsgMfL.js",
-    "name": "smooth-scroll"
+  "_motion-prefs-BipBCMuc.js": {
+    "file": "assets/motion-prefs-BipBCMuc.js",
+    "name": "motion-prefs"
   },
   "resources/css/app.css": {
-    "file": "assets/app-njoLlK7v.css",
+    "file": "assets/app-COMAgphv.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -17,34 +17,40 @@
     ]
   },
   "resources/js/about.js": {
-    "file": "assets/about-DNzQv7g5.js",
+    "file": "assets/about-Y8cSOaEM.js",
     "name": "about",
     "src": "resources/js/about.js",
     "isEntry": true,
     "imports": [
-      "_smooth-scroll-CpTsgMfL.js"
+      "_motion-prefs-BipBCMuc.js"
     ]
   },
+  "resources/js/admin-dashboard.js": {
+    "file": "assets/admin-dashboard-Dr7LDThN.js",
+    "name": "admin-dashboard",
+    "src": "resources/js/admin-dashboard.js",
+    "isEntry": true
+  },
   "resources/js/app.js": {
-    "file": "assets/app-WI9MS8WM.js",
+    "file": "assets/app-CZv9RviG.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_fit-product-cutout-B84hcuYd.js"
+      "_fit-product-cutout-DN5pYg0Q.js"
     ]
   },
   "resources/js/home.js": {
-    "file": "assets/home-BUdboohl.js",
+    "file": "assets/home-B4Prpr4L.js",
     "name": "home",
     "src": "resources/js/home.js",
     "isEntry": true,
     "imports": [
-      "_smooth-scroll-CpTsgMfL.js",
-      "_fit-product-cutout-B84hcuYd.js"
+      "_motion-prefs-BipBCMuc.js",
+      "_fit-product-cutout-DN5pYg0Q.js"
     ],
     "css": [
-      "assets/home-BNWJ7Zcm.css"
+      "assets/home-DWLRhl8o.css"
     ]
   }
 }

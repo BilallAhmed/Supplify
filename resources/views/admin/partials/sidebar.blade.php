@@ -35,7 +35,8 @@
         [
             'label' => 'System',
             'items' => [
-                ['label' => 'Settings', 'route' => 'admin.settings.edit', 'icon' => 'settings'],
+                ['label' => 'Settings', 'route' => 'admin.settings.edit', 'icon' => 'settings', 'match' => 'admin.settings.edit'],
+                ['label' => 'Tracking & Scripts', 'route' => 'admin.settings.tracking.edit', 'icon' => 'settings', 'match' => 'admin.settings.tracking.*'],
             ],
         ],
     ];
@@ -75,9 +76,13 @@
             <ul class="space-y-0.5">
                 @foreach ($group['items'] as $item)
                     @php
-                        $active = request()->routeIs($item['route'])
-                            || request()->routeIs(str_replace('.index', '.*', $item['route']))
-                            || request()->routeIs(str_replace('.edit', '.*', $item['route']));
+                        $active = isset($item['match'])
+                            ? request()->routeIs($item['match'])
+                            : (
+                                request()->routeIs($item['route'])
+                                || request()->routeIs(str_replace('.index', '.*', $item['route']))
+                                || request()->routeIs(str_replace('.edit', '.*', $item['route']))
+                            );
                     @endphp
                     <li>
                         <a

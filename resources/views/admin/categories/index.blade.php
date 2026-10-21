@@ -12,57 +12,68 @@
 @endsection
 
 @section('content')
-    <form method="GET" class="mb-4 flex flex-wrap gap-2">
-        <x-input name="q" type="search" placeholder="Search categories…" :value="request('q')" class="max-w-sm" />
-        <x-button type="submit" variant="outline">Search</x-button>
-    </form>
+    <div class="admin-table-panel">
+        <form method="GET" class="admin-toolbar">
+            <div class="admin-toolbar__search">
+                <x-input name="q" type="search" placeholder="Search categories…" :value="request('q')" aria-label="Search categories" />
+            </div>
+            <div class="admin-toolbar__actions">
+                @if (request()->filled('q'))
+                    <x-button href="{{ route('admin.categories.index') }}" variant="ghost" size="sm">Clear</x-button>
+                @endif
+                <x-button type="submit" variant="primary" size="sm">Search</x-button>
+            </div>
+        </form>
 
-    <div class="overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface-elevated shadow-soft">
-        <table class="min-w-full divide-y divide-line text-left text-sm">
-            <thead class="bg-surface-muted/70 text-xs tracking-wide text-ink-muted uppercase">
-                <tr>
-                    <th class="px-4 py-3 font-semibold">Name</th>
-                    <th class="px-4 py-3 font-semibold">Parent</th>
-                    <th class="px-4 py-3 font-semibold">Products</th>
-                    <th class="px-4 py-3 font-semibold">Status</th>
-                    <th class="px-4 py-3 font-semibold">Sort</th>
-                    <th class="px-4 py-3 font-semibold"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-line">
-                @forelse ($categories as $category)
+        <div class="admin-table-wrap">
+            <table class="admin-data-table">
+                <thead>
                     <tr>
-                        <td class="px-4 py-3">
-                            <p class="font-medium text-ink">{{ $category->name }}</p>
-                            <p class="text-xs text-ink-subtle">{{ $category->slug }}</p>
-                        </td>
-                        <td class="px-4 py-3 text-ink-muted">{{ $category->parent?->name ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ $category->products_count }}</td>
-                        <td class="px-4 py-3">
-                            <x-badge :variant="$category->is_active ? 'success' : 'neutral'">
-                                {{ $category->is_active ? 'Active' : 'Hidden' }}
-                            </x-badge>
-                        </td>
-                        <td class="px-4 py-3">{{ $category->sort_order }}</td>
-                        <td class="px-4 py-3 text-right">
-                            <div class="flex justify-end gap-2">
-                                <x-button href="{{ route('admin.categories.edit', $category) }}" variant="ghost" size="sm">Edit</x-button>
-                                <form method="POST" action="{{ route('admin.categories.destroy', $category) }}" onsubmit="return confirm('Delete this category?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-button type="submit" variant="danger" size="sm">Delete</x-button>
-                                </form>
-                            </div>
-                        </td>
+                        <th>Name</th>
+                        <th>Parent</th>
+                        <th>Products</th>
+                        <th>Status</th>
+                        <th>Sort</th>
+                        <th><span class="sr-only">Actions</span></th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-10 text-center text-ink-muted">No categories yet. Create your first category.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($categories as $category)
+                        <tr>
+                            <td>
+                                <p class="font-medium text-ink">{{ $category->name }}</p>
+                                <p class="text-xs text-ink-subtle">{{ $category->slug }}</p>
+                            </td>
+                            <td class="text-ink-muted">{{ $category->parent?->name ?? '—' }}</td>
+                            <td>{{ $category->products_count }}</td>
+                            <td>
+                                <x-badge :variant="$category->is_active ? 'success' : 'neutral'">
+                                    {{ $category->is_active ? 'Active' : 'Hidden' }}
+                                </x-badge>
+                            </td>
+                            <td>{{ $category->sort_order }}</td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <x-button href="{{ route('admin.categories.edit', $category) }}" variant="ghost" size="sm">Edit</x-button>
+                                    <form method="POST" action="{{ route('admin.categories.destroy', $category) }}" onsubmit="return confirm('Delete this category?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-button type="submit" variant="danger" size="sm">Delete</x-button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="admin-data-table__empty">No categories yet. Create your first category.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($categories->hasPages())
+            <div class="admin-table-panel__pager">{{ $categories->links() }}</div>
+        @endif
     </div>
-
-    <div class="mt-4">{{ $categories->links() }}</div>
 @endsection

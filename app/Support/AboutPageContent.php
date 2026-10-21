@@ -176,17 +176,13 @@ final class AboutPageContent
             ],
             'cta' => [
                 'enabled' => true,
+                'eyebrow' => 'DISCOVER SUPPLIFY',
                 'heading' => 'Get to know Supplify',
                 'body' => 'Explore our range and learn more about the nutritional products we are bringing together.',
                 'primary_label' => 'Explore our range',
                 'primary_url' => '/shop',
                 'secondary_label' => '',
                 'secondary_url' => '',
-                'product_images' => [
-                    'images/products/1S5A6172.png',
-                    'images/products/1S5A6197.png',
-                    'images/products/1S5A6174.png',
-                ],
             ],
             'team' => [
                 'enabled' => false,

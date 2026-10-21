@@ -19,6 +19,7 @@ class CatalogService
 {
     public function __construct(
         private readonly MediaService $media,
+        private readonly ProductActivityLogger $activity,
     ) {}
 
     public function createProduct(array $data, array $categoryIds = [], array $relatedIds = [], ?UploadedFile $image = null): Product
@@ -35,7 +36,10 @@ class CatalogService
                 $this->attachImage($product, $image, true);
             }
 
-            return $product->fresh(['categories', 'tags', 'images', 'relatedProducts']);
+            $fresh = $product->fresh(['categories', 'tags', 'images', 'relatedProducts']);
+            $this->activity->created($fresh);
+
+            return $fresh;
         });
     }
 
@@ -53,7 +57,10 @@ class CatalogService
                 $this->attachImage($product, $image, $product->images()->doesntExist());
             }
 
-            return $product->fresh(['categories', 'tags', 'images', 'relatedProducts']);
+            $fresh = $product->fresh(['categories', 'tags', 'images', 'relatedProducts']);
+            $this->activity->updated($fresh);
+
+            return $fresh;
         });
     }
 
@@ -92,7 +99,10 @@ class CatalogService
                 ]);
             }
 
-            return $copy->fresh(['categories', 'tags', 'images', 'relatedProducts']);
+            $fresh = $copy->fresh(['categories', 'tags', 'images', 'relatedProducts']);
+            $this->activity->created($fresh);
+
+            return $fresh;
         });
     }
 
@@ -141,7 +151,21 @@ class CatalogService
             return 0;
         }
 
-        return Product::query()->whereIn('id', $ids)->update(['is_featured' => $featured]);
+        $products = Product::query()->whereIn('id', $ids)->get();
+        $changed = 0;
+
+        foreach ($products as $product) {
+            if ((bool) $product->is_featured === $featured) {
+                continue;
+            }
+
+            $product->is_featured = $featured;
+            $product->save();
+            $this->activity->featuredChanged($product, $featured);
+            $changed++;
+        }
+
+        return $changed;
     }
 
     /**

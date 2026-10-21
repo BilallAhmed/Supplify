@@ -24,7 +24,7 @@
         'offers' => [
             '@type' => 'Offer',
             'url' => route('products.show', $product->slug),
-            'priceCurrency' => 'USD',
+            'priceCurrency' => app(\App\Services\StoreSettings::class)->currency(),
             'price' => Money::toDecimalString($product->effectivePriceCents()),
             'availability' => $availability,
             'itemCondition' => 'https://schema.org/NewCondition',

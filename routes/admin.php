@@ -4,14 +4,16 @@ use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContactEnquiryController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\MediaController;
-use App\Http\Controllers\Admin\ModulePlaceholderController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\TrackingSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -57,14 +59,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
 
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::put('customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+
     Route::resource('coupons', CouponController::class)->except(['show']);
 
-    $placeholders = [
-        'customers.index' => ['customers', '/customers'],
-        'settings.edit' => ['settings', '/settings'],
-    ];
-
-    foreach ($placeholders as $name => [$module, $path]) {
-        Route::get($path, fn () => app(ModulePlaceholderController::class)($module))->name($name);
-    }
+    Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::get('settings/tracking', [TrackingSettingsController::class, 'edit'])->name('settings.tracking.edit');
+    Route::put('settings/tracking', [TrackingSettingsController::class, 'update'])->name('settings.tracking.update');
 });

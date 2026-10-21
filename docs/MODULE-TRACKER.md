@@ -189,9 +189,9 @@ Update this file at the end of every module session.
 | Security checks | `auth` middleware; Order/Address policies; cannot view others’ orders/addresses |
 | SEO checks | Account pages transactional |
 | Performance checks | Paginated orders (10); recent orders limited to 5 |
-| Tests | `CustomerAccountTest` |
+| Tests | `CustomerAccountTest`; `AdminCustomerTest` |
 | Status | **COMPLETED** |
-| Completion notes | Header Account icon → dashboard. Default address prefills checkout shipping fields. |
+| Completion notes | Storefront: Header Account icon → dashboard; addresses CRUD; order history. Admin: `/admin/customers` list/show/update (active flag) with addresses + order history links (was placeholder). Default address prefills checkout shipping fields. |
 
 ---
 
@@ -352,4 +352,4 @@ Update this file at the end of every module session.
 | Objective | Live stable before 11.11 |
 | Dependencies | UAT approved |
 | Status | **PLANNED** |
-| Completion notes | Deploy 7–9 Nov; freeze 10 Nov |
+| Completion notes | Deploy 7–9 Nov; freeze 10 Nov. Admin store settings live at `/admin/settings` (currency, shipping method/flat/free-over, tax %) in `store_settings`, used by checkout. Tracking & Scripts at `/admin/settings/tracking` (GTM/GA4/Meta/custom snippets, consent + env gates, `settings_audits`). Full production deploy checklist still pending. |

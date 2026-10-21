@@ -1,5 +1,20 @@
-<footer class="mt-auto border-t border-line bg-surface-deep text-white" role="contentinfo">
-    <x-container class="ui-section !py-12 lg:!py-16">
+@php
+    $footerSeamless = request()->routeIs('pages.show') && request()->route('page') === 'about';
+@endphp
+<footer
+    @class([
+        'mt-auto bg-surface-deep text-white',
+        'border-t border-line' => ! $footerSeamless,
+    ])
+    role="contentinfo"
+>
+    <x-container
+        @class([
+            'ui-section',
+            '!pt-0 !pb-12 lg:!pb-16' => $footerSeamless,
+            '!py-12 lg:!py-16' => ! $footerSeamless,
+        ])
+    >
         <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
             <div class="lg:col-span-1">
                 <a href="{{ route('home') }}" class="inline-block" aria-label="{{ config('app.name') }} home">
@@ -13,7 +28,7 @@
                     >
                 </a>
                 <p class="mt-3 max-w-xs text-sm leading-relaxed text-white/70">
-                    Science-led supplements for everyday performance. Transparent formulas. US-focused fulfillment.
+                    Science-led supplements for everyday performance. Transparent formulas. Clear labels you can verify.
                 </p>
             </div>
 
@@ -47,7 +62,7 @@
 
         <div class="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
-            <p>These statements have not been evaluated by the FDA. Products are not intended to diagnose, treat, cure, or prevent any disease.</p>
+            <p>These statements have not been evaluated by regulatory authorities. Products are not intended to diagnose, treat, cure, or prevent any disease.</p>
         </div>
     </x-container>
 </footer>

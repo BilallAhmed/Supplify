@@ -81,6 +81,7 @@ class BlogSeeder extends Seeder
                     'author_id' => $adminId,
                     'featured_image' => $entry['image'],
                     'is_published' => true,
+                    'is_featured' => $index === 0,
                     'published_at' => now()->subDays($dayOffsets[$index] ?? ($index + 1)),
                     'seo_title' => $entry['title'].' | Supplify',
                     'seo_description' => $entry['excerpt'],

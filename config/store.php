@@ -10,6 +10,8 @@ return [
     |--------------------------------------------------------------------------
     | Shared placeholder regular price for client-preview imports until real
     | commercial pricing is approved. Stored via Money::toCents().
+    | When switching STORE_CURRENCY to PKR, re-enter catalog amounts as PKR —
+    | do not reinterpret existing USD placeholders as rupees.
     */
     'preview_price' => env('STORE_PREVIEW_PRICE', '1000.00'),
 

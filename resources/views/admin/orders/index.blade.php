@@ -11,62 +11,79 @@
 @endsection
 
 @section('content')
-    <form method="GET" class="mb-4 flex flex-wrap gap-2">
-        <x-input name="q" type="search" placeholder="Search number, email, name…" :value="request('q')" class="max-w-sm" />
-        <x-select name="status" class="max-w-xs">
-            <option value="">All statuses</option>
-            @foreach ($statuses as $status)
-                <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
-            @endforeach
-        </x-select>
-        <x-button type="submit" variant="outline">Filter</x-button>
-    </form>
+    <div class="admin-table-panel">
+        <form method="GET" class="admin-toolbar">
+            <div class="admin-toolbar__search">
+                <x-input name="q" type="search" placeholder="Search number, email, name…" :value="request('q')" aria-label="Search orders" />
+            </div>
+            <div class="admin-toolbar__control">
+                <x-select name="status" aria-label="Order status">
+                    <option value="">All statuses</option>
+                    @foreach ($statuses as $status)
+                        <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
+                    @endforeach
+                </x-select>
+            </div>
+            <div class="admin-toolbar__actions">
+                @if (request()->filled('q') || request()->filled('status'))
+                    <x-button href="{{ route('admin.orders.index') }}" variant="ghost" size="sm">Clear</x-button>
+                @endif
+                <x-button type="submit" variant="primary" size="sm">Apply filters</x-button>
+            </div>
+        </form>
 
-    <div class="overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface-elevated shadow-soft">
-        <table class="min-w-full divide-y divide-line text-left text-sm">
-            <thead class="bg-surface-muted/70 text-xs tracking-wide text-ink-muted uppercase">
-                <tr>
-                    <th class="px-4 py-3 font-semibold">Order</th>
-                    <th class="px-4 py-3 font-semibold">Customer</th>
-                    <th class="px-4 py-3 font-semibold">Total</th>
-                    <th class="px-4 py-3 font-semibold">Payment</th>
-                    <th class="px-4 py-3 font-semibold">Status</th>
-                    <th class="px-4 py-3 font-semibold">Placed</th>
-                    <th class="px-4 py-3 font-semibold"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-line">
-                @forelse ($orders as $order)
+        <div class="admin-table-wrap">
+            <table class="admin-data-table">
+                <thead>
                     <tr>
-                        <td class="px-4 py-3">
-                            <p class="font-medium text-ink">{{ $order->order_number }}</p>
-                            <p class="text-xs text-ink-subtle">{{ $order->items_count }} item{{ $order->items_count === 1 ? '' : 's' }}</p>
-                        </td>
-                        <td class="px-4 py-3">
-                            <p class="text-ink">{{ $order->shipping_name }}</p>
-                            <p class="text-xs text-ink-subtle">{{ $order->email }}</p>
-                        </td>
-                        <td class="px-4 py-3 font-semibold text-ink">{{ $order->totalFormatted() }}</td>
-                        <td class="px-4 py-3 text-ink-muted">
-                            {{ $order->payment_method->label() }}
-                            <span class="block text-xs">{{ $order->payment_status->label() }}</span>
-                        </td>
-                        <td class="px-4 py-3">
-                            <x-badge variant="brand">{{ $order->status->label() }}</x-badge>
-                        </td>
-                        <td class="px-4 py-3 text-ink-muted">{{ optional($order->placed_at)->timezone(config('app.timezone'))->format('M j, Y g:i A') ?? '—' }}</td>
-                        <td class="px-4 py-3 text-right">
-                            <x-button href="{{ route('admin.orders.show', $order) }}" variant="ghost" size="sm">View</x-button>
-                        </td>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Placed</th>
+                        <th><span class="sr-only">Actions</span></th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="px-4 py-10 text-center text-ink-muted">No orders yet.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($orders as $order)
+                        <tr>
+                            <td>
+                                <p class="font-medium text-ink">{{ $order->order_number }}</p>
+                                <p class="text-xs text-ink-subtle">{{ $order->items_count }} item{{ $order->items_count === 1 ? '' : 's' }}</p>
+                            </td>
+                            <td>
+                                <p class="text-ink">{{ $order->shipping_name }}</p>
+                                <p class="text-xs text-ink-subtle">{{ $order->email }}</p>
+                            </td>
+                            <td class="font-semibold text-ink">{{ $order->totalFormatted() }}</td>
+                            <td class="text-ink-muted">
+                                {{ $order->payment_method->label() }}
+                                <span class="block text-xs">{{ $order->payment_status->label() }}</span>
+                            </td>
+                            <td>
+                                <x-badge variant="brand">{{ $order->status->label() }}</x-badge>
+                            </td>
+                            <td class="text-ink-muted whitespace-nowrap">
+                                {{ optional($order->placed_at)->timezone(config('app.timezone'))->format('M j, Y g:i A') ?? '—' }}
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <x-button href="{{ route('admin.orders.show', $order) }}" variant="outline" size="sm">View</x-button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="admin-data-table__empty">No orders yet.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($orders->hasPages())
+            <div class="admin-table-panel__pager">{{ $orders->links() }}</div>
+        @endif
     </div>
-
-    <div class="mt-4">{{ $orders->links() }}</div>
 @endsection

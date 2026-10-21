@@ -12,26 +12,26 @@
     $errorMessage = $error ?? ($name ? $errors->first($name) : null);
 @endphp
 
-<div class="w-full">
-    <label for="{{ $id }}" class="flex cursor-pointer items-start gap-3">
+<div {{ $attributes->only('class')->merge(['class' => 'ui-field ui-field--checkbox']) }}>
+    <label for="{{ $id }}" class="ui-checkbox">
         <input
             id="{{ $id }}"
             type="checkbox"
             value="{{ $value }}"
             @if ($name) name="{{ $name }}" @endif
             @checked((bool) $checked)
-            {{ $attributes->except('checked')->merge([
-                'class' => 'mt-1 size-4 rounded border-line text-brand focus:ring-brand/30',
+            {{ $attributes->except(['class', 'checked'])->merge([
+                'class' => 'ui-checkbox__input',
             ]) }}
         >
-        <span class="min-w-0">
+        <span class="ui-checkbox__copy">
             @if ($label)
-                <span class="block text-sm font-medium text-ink">{{ $label }}</span>
+                <span class="ui-checkbox__label">{{ $label }}</span>
             @else
-                <span class="block text-sm text-ink">{{ $slot }}</span>
+                <span class="ui-checkbox__label">{{ $slot }}</span>
             @endif
             @if ($help)
-                <span class="mt-0.5 block text-xs text-ink-muted">{{ $help }}</span>
+                <span class="ui-checkbox__help">{{ $help }}</span>
             @endif
         </span>
     </label>

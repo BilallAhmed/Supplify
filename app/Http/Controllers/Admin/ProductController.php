@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\CatalogService;
 use App\Services\MediaService;
+use App\Services\ProductActivityLogger;
 use App\Services\ProductCsvService;
 use App\Services\ProductVariationService;
 use App\Support\Measurements;
@@ -27,6 +28,7 @@ class ProductController extends Controller
         private readonly MediaService $media,
         private readonly ProductCsvService $csv,
         private readonly ProductVariationService $variations,
+        private readonly ProductActivityLogger $activity,
     ) {}
 
     public function index(Request $request): View
@@ -224,6 +226,7 @@ class ProductController extends Controller
 
         $product->is_featured = ! $product->is_featured;
         $product->save();
+        $this->activity->featuredChanged($product, (bool) $product->is_featured);
 
         return redirect()
             ->route('admin.products.index', $request->only(['q', 'status', 'page']))
@@ -370,6 +373,7 @@ class ProductController extends Controller
                     'draft' => $q->where('is_active', false),
                     'low_stock' => $q->where('stock_status', 'low_stock'),
                     'out_of_stock' => $q->where('stock_status', 'out_of_stock'),
+                    'featured' => $q->where('is_featured', true),
                     default => null,
                 };
             });

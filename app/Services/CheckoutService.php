@@ -8,6 +8,10 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutService
 {
+    public function __construct(
+        private readonly StoreSettings $storeSettings,
+    ) {}
+
     /**
      * @param  array{
      *     subtotal_cents: int,
@@ -37,12 +41,12 @@ class CheckoutService
         $merchandise = max(0, $subtotal - $discount);
         $lines = $cartTotals['lines'] ?? collect();
 
-        $method = (string) config('store.shipping.method', 'flat');
+        $method = $this->storeSettings->shippingMethod();
         $weightGrams = $this->shipmentWeightGrams($lines);
         $shipping = 0;
 
         if ($merchandise > 0) {
-            $freeOver = (int) config('store.shipping.free_over_cents', 7500);
+            $freeOver = $this->storeSettings->freeOverCents();
 
             if ($merchandise >= $freeOver) {
                 $shipping = 0;
@@ -54,12 +58,12 @@ class CheckoutService
                 }
                 $shipping = $this->weightBasedRate($weightGrams);
             } else {
-                $shipping = (int) config('store.shipping.flat_rate_cents', 599);
+                $shipping = $this->storeSettings->flatRateCents();
             }
         }
 
         $taxable = $merchandise + $shipping;
-        $rate = max(0, (float) config('store.tax.rate_percent', 0));
+        $rate = $this->storeSettings->taxRatePercent();
         $tax = (int) round($taxable * ($rate / 100));
         $total = $merchandise + $shipping + $tax;
 
@@ -113,7 +117,7 @@ class CheckoutService
 
     private function weightBasedRate(int $grams): int
     {
-        $rates = collect(config('store.shipping.weight_rates', []))
+        $rates = collect($this->storeSettings->weightRates())
             ->sortBy('max_grams')
             ->values();
 
@@ -125,6 +129,6 @@ class CheckoutService
 
         $last = $rates->last();
 
-        return (int) ($last['price_cents'] ?? config('store.shipping.flat_rate_cents', 599));
+        return (int) ($last['price_cents'] ?? $this->storeSettings->flatRateCents());
     }
 }

@@ -16,6 +16,7 @@ use App\Notifications\OrderPlacedNotification;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use App\Services\CouponService;
+use App\Services\StoreSettings;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -28,6 +29,7 @@ class PlaceOrder
         private readonly CartService $carts,
         private readonly CheckoutService $checkout,
         private readonly CouponService $coupons,
+        private readonly StoreSettings $storeSettings,
     ) {}
 
     /**
@@ -131,7 +133,7 @@ class PlaceOrder
                 'shipping_cents' => $quote['shipping_cents'],
                 'tax_cents' => $quote['tax_cents'],
                 'total_cents' => $quote['total_cents'],
-                'currency' => config('store.currency', 'USD'),
+                'currency' => $this->storeSettings->currency(),
                 'coupon_id' => $coupon?->id,
                 'coupon_code' => $coupon?->code,
                 'notes' => $input['notes'] ?? null,

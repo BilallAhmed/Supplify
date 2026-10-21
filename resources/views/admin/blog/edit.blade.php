@@ -14,11 +14,13 @@
 @endsection
 
 @section('content')
-    <form method="POST" action="{{ route('admin.blog.update', $post) }}" enctype="multipart/form-data" class="max-w-3xl space-y-6 rounded-[var(--radius-panel)] border border-line bg-surface-elevated p-6 shadow-soft">
+    <form method="POST" action="{{ route('admin.blog.update', $post) }}" enctype="multipart/form-data" class="admin-form">
         @csrf
         @method('PUT')
-        @include('admin.blog._form')
-        <div class="flex flex-wrap gap-3">
+        <x-card>
+            @include('admin.blog._form')
+        </x-card>
+        <div class="admin-form__actions">
             <x-button type="submit" variant="primary">Save changes</x-button>
             <x-button href="{{ route('admin.blog.index') }}" variant="ghost">Back</x-button>
         </div>

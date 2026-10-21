@@ -1,495 +1,161 @@
 import gsap from 'gsap';
-import { hasFinePointer, prefersReducedMotion } from './smooth-scroll';
+import { prefersReducedMotion } from './motion-prefs';
 
-const AUTOPLAY_MS = 7000;
-const ENTER_DURATION = 0.9;
-const EXIT_DURATION = 0.7;
-const BG_DURATION = 1.05;
-const STAGGER = 0.08;
-const TEXT_X = 28;
-
+/** Photograph-led transitions: keep the outgoing photograph fully covered until
+ * the next decoded scene has dissolved over it. Never clip either background. */
 export function initHero(root = document) {
     const hero = root.querySelector('[data-home-hero]');
-    if (! hero) return () => {};
-
+    if (!hero) return () => {};
     const slides = [...hero.querySelectorAll('[data-hero-slide]')];
+    if (!slides.length) return () => {};
     const dots = [...hero.querySelectorAll('[data-hero-dot]')];
-    const progressEls = [...hero.querySelectorAll('[data-hero-progress]')];
-    const prevBtn = hero.querySelector('[data-hero-prev]');
-    const nextBtn = hero.querySelector('[data-hero-next]');
-    const playBtn = hero.querySelector('[data-hero-play]');
+    const controls = hero.querySelector('[data-hero-controls]');
+    const play = hero.querySelector('[data-hero-play]');
+    const header = document.querySelector('.site-header.is-over-hero');
     const live = hero.querySelector('[data-hero-live]');
-    const bgImages = [...hero.querySelectorAll('[data-hero-bg-image]')];
-
-    let index = Math.max(0, slides.findIndex((s) => s.classList.contains('is-active')));
-    let animating = false;
-    let activeTl = null;
-    let autoplayPaused = false;
-    let autoplayUserPaused = false;
-    let progressTween = null;
-    let rafId = 0;
-    let lastTs = 0;
-    let visible = true;
-    let pageVisible = true;
-    const reduced = prefersReducedMotion();
-    const finePointer = hasFinePointer();
-    const canParallax = ! reduced && finePointer;
-
-    const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
-
-    const killActive = () => {
-        activeTl?.kill();
-        activeTl = null;
-    };
-
-    const setInert = (slideEl, inert) => {
-        if (inert) slideEl.setAttribute('inert', '');
-        else slideEl.removeAttribute('inert');
-        slideEl.setAttribute('aria-hidden', inert ? 'true' : 'false');
-        slideEl.querySelectorAll('a, button').forEach((el) => {
-            if (inert) el.setAttribute('tabindex', '-1');
-            else el.removeAttribute('tabindex');
-        });
-    };
-
-    const parts = (slideEl) => ({
-        lines: [...slideEl.querySelectorAll('[data-hero-line]')],
-        products: [...slideEl.querySelectorAll('[data-hero-product]')],
-        enters: [...slideEl.querySelectorAll('[data-hero-enter]')],
-        parallaxes: [...slideEl.querySelectorAll('[data-hero-parallax]')],
-    });
-
-    const resetPointerState = (slideEl) => {
-        parts(slideEl).parallaxes.forEach((el) => {
-            el.style.transform = '';
-        });
-    };
-
-    const showSettled = (slideEl) => {
-        const p = parts(slideEl);
-        gsap.set(slideEl, { autoAlpha: 1 });
-        gsap.set(p.lines, { autoAlpha: 1, x: 0, y: 0 });
-        // Products fade only — stay grounded on the surface (no y/scale hover)
-        gsap.set(p.enters, { autoAlpha: 1, x: 0, y: 0, scale: 1, clearProps: 'transform' });
-    };
-
-    const setEntranceStart = (slideEl) => {
-        const p = parts(slideEl);
-        gsap.set(p.lines, { autoAlpha: 0, x: -TEXT_X, y: 0 });
-        gsap.set(p.enters, { autoAlpha: 0, x: 0, y: 0, scale: 1 });
-        p.parallaxes.forEach((el) => {
-            el.style.transform = '';
-        });
-    };
-
-    const playEntrance = (slideEl) => {
-        const p = parts(slideEl);
-        if (reduced) {
-            showSettled(slideEl);
-            return gsap.timeline();
-        }
-
-        const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-        tl.to(
-            p.lines,
-            { autoAlpha: 1, x: 0, duration: ENTER_DURATION, stagger: STAGGER },
-            0
-        );
-        tl.to(
-            p.enters,
-            {
-                autoAlpha: 1,
-                duration: ENTER_DURATION * 0.85,
-                stagger: 0.06,
-                ease: 'power2.out',
-            },
-            0.12
-        );
-        return tl;
-    };
-
-    const playExit = (slideEl) => {
-        const p = parts(slideEl);
-        if (reduced) {
-            gsap.set(slideEl, { autoAlpha: 0 });
-            return gsap.timeline();
-        }
-
-        const tl = gsap.timeline({ defaults: { ease: 'power1.inOut' } });
-        tl.to(p.lines, { autoAlpha: 0, x: -12, duration: EXIT_DURATION, stagger: 0.03 }, 0);
-        tl.to(p.enters, { autoAlpha: 0, duration: EXIT_DURATION * 0.9, stagger: 0.04 }, 0.05);
-        return tl;
-    };
-
-    const hydrateImage = (img) => {
-        if (! img) return Promise.resolve();
-        const src = img.getAttribute('data-src');
-        if (src) {
-            img.setAttribute('src', src);
-            img.removeAttribute('data-src');
-        }
-        if (typeof img.decode === 'function') {
-            return img.decode().catch(() => {});
-        }
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => {
-            img.addEventListener('load', resolve, { once: true });
-            img.addEventListener('error', resolve, { once: true });
-        });
-    };
-
-    const hydrateSlideImages = (slideEl) => {
-        if (! slideEl) return Promise.resolve();
-        return Promise.all(
-            [...slideEl.querySelectorAll('img')].map((img) => hydrateImage(img))
-        );
-    };
-
-    const hydrateBackground = (i) => hydrateImage(bgImages[i]);
-
-    const prefetchNeighbor = (from) => {
-        const next = (from + 1) % slides.length;
-        hydrateSlideImages(slides[next]);
-        hydrateBackground(next);
-    };
-
-    const syncDots = (next) => {
-        dots.forEach((d, i) => {
-            d.classList.toggle('is-active', i === next);
-            d.setAttribute('aria-selected', i === next ? 'true' : 'false');
-        });
-        if (live) {
-            live.textContent =
-                slides[next].querySelector('[data-hero-title]')?.textContent?.trim() ||
-                `Slide ${next + 1}`;
-        }
-    };
-
-    const settleBackground = (next) => {
-        bgImages.forEach((img, i) => {
-            const active = i === next;
-            img.classList.toggle('is-active', active);
-            gsap.set(img, {
-                opacity: active ? 1 : 0,
-                zIndex: active ? 1 : 0,
-                clearProps: active ? '' : 'zIndex',
-            });
-            img.style.transform = '';
-        });
-    };
-
-    const crossfadeBackground = (from, to) => {
-        const currentBg = bgImages[from];
-        const nextBg = bgImages[to];
-        if (! nextBg || from === to) {
-            settleBackground(to);
-            return gsap.timeline();
-        }
-
-        const tl = gsap.timeline();
-        gsap.set(nextBg, { opacity: 0, zIndex: 2 });
-        gsap.set(currentBg, { opacity: 1, zIndex: 1 });
-        nextBg.classList.add('is-active');
-
-        tl.to(nextBg, { opacity: 1, duration: BG_DURATION, ease: 'power1.inOut' }, 0);
-        tl.to(currentBg, { opacity: 0, duration: BG_DURATION, ease: 'power1.inOut' }, 0);
-        tl.add(() => {
-            currentBg.classList.remove('is-active');
-            gsap.set(currentBg, { zIndex: 0 });
-            gsap.set(nextBg, { zIndex: 1 });
-        });
-        return tl;
-    };
-
-    const stopProgress = () => {
-        progressTween?.kill();
-        progressTween = null;
-        progressEls.forEach((el) => {
-            gsap.set(el, { scaleX: 0 });
-        });
-    };
-
-    const startProgress = () => {
-        stopProgress();
-        if (reduced || autoplayPaused || autoplayUserPaused || slides.length < 2) return;
-        const el = progressEls[index];
-        if (! el) return;
-        gsap.set(el, { scaleX: 0, transformOrigin: 'left center' });
-        progressTween = gsap.to(el, {
-            scaleX: 1,
-            duration: AUTOPLAY_MS / 1000,
-            ease: 'none',
-            onComplete: () => go(1, { fromAuto: true }),
-        });
-    };
-
-    const finishSlideSwap = (current, incoming, next) => {
-        current.classList.remove('is-active', 'is-leaving');
-        incoming.classList.remove('is-entering');
-        incoming.classList.add('is-active');
-        setInert(current, true);
-        setInert(incoming, false);
-        gsap.set(current, { autoAlpha: 0, zIndex: 0 });
-        gsap.set(incoming, { autoAlpha: 1, zIndex: 2 });
-        showSettled(incoming);
-        settleBackground(next);
-        index = next;
-    };
-
-    const setActive = (next, { fromAuto = false } = {}) => {
-        if (animating || next === index || ! slides[next]) return;
-        animating = true;
-        killActive();
-        stopProgress();
-
-        const from = index;
-        const current = slides[from];
-        const incoming = slides[next];
-
-        syncDots(next);
-        prefetchNeighbor(next);
-        resetPointerState(incoming);
-
-        const startTransition = () => {
-            current.classList.add('is-leaving');
-            incoming.classList.add('is-entering');
-            setEntranceStart(incoming);
-            gsap.set(incoming, { autoAlpha: 1, zIndex: 3 });
-            gsap.set(current, { zIndex: 2 });
-
-            if (reduced) {
-                finishSlideSwap(current, incoming, next);
-                animating = false;
-                if (! fromAuto) pauseAutoplayBriefly();
-                startProgress();
-                return;
-            }
-
-            activeTl = gsap.timeline({
-                onComplete: () => {
-                    finishSlideSwap(current, incoming, next);
-                    animating = false;
-                    activeTl = null;
-                    if (! fromAuto) pauseAutoplayBriefly();
-                    startProgress();
-                },
-            });
-
-            // Overlapping crossfades — no hard mid-transition cut
-            activeTl.add(crossfadeBackground(from, next), 0);
-            activeTl.add(playExit(current), 0);
-            activeTl.add(playEntrance(incoming), 0.22);
-        };
-
-        Promise.all([hydrateSlideImages(incoming), hydrateBackground(next)]).then(startTransition);
-    };
-
-    let resumeTimer = null;
-    const pauseAutoplayBriefly = () => {
-        autoplayPaused = true;
-        stopProgress();
-        clearTimeout(resumeTimer);
-        resumeTimer = setTimeout(() => {
-            if (! autoplayUserPaused && visible && pageVisible) {
-                autoplayPaused = false;
-                startProgress();
-            }
-        }, 4500);
-    };
-
-    const go = (dir, opts = {}) => {
-        setActive((index + dir + slides.length) % slides.length, opts);
-    };
-
-    const updatePlayUi = () => {
-        if (! playBtn) return;
-        const paused = autoplayUserPaused;
-        playBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
-        playBtn.setAttribute(
-            'aria-label',
-            paused ? 'Play automatic slideshow' : 'Pause automatic slideshow'
-        );
-        const pauseIcon = playBtn.querySelector('.is-pause');
-        const playIcon = playBtn.querySelector('.is-play');
-        if (pauseIcon) pauseIcon.hidden = paused;
-        if (playIcon) playIcon.hidden = ! paused;
-        hero.classList.toggle('is-autoplay-paused', paused);
-    };
-
-    const setUserPaused = (paused) => {
-        autoplayUserPaused = paused;
-        autoplayPaused = paused;
-        updatePlayUi();
-        if (paused) stopProgress();
-        else if (visible && pageVisible) startProgress();
-    };
-
-    prevBtn?.addEventListener('click', () => go(-1));
-    nextBtn?.addEventListener('click', () => go(1));
-    dots.forEach((dot, i) => {
-        dot.addEventListener('click', () => setActive(i));
-    });
-    playBtn?.addEventListener('click', () => setUserPaused(! autoplayUserPaused));
-
-    hero.addEventListener('mouseenter', () => {
-        if (! autoplayUserPaused) {
-            autoplayPaused = true;
-            stopProgress();
-        }
-    });
-    hero.addEventListener('mouseleave', () => {
-        pointer.tx = 0;
-        pointer.ty = 0;
-        if (! autoplayUserPaused && visible && pageVisible) {
-            autoplayPaused = false;
-            startProgress();
-        }
-    });
-    hero.addEventListener('focusin', () => {
-        if (! autoplayUserPaused) {
-            autoplayPaused = true;
-            stopProgress();
-        }
-    });
-    hero.addEventListener('focusout', (e) => {
-        if (! hero.contains(e.relatedTarget) && ! autoplayUserPaused && visible && pageVisible) {
-            autoplayPaused = false;
-            startProgress();
-        }
-    });
-
-    // Touch swipe
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const cleanups = [];
+    const ctx = gsap.context(() => {}, hero);
+    const tracked = (fn) => ctx.add(fn);
+    let index = Math.max(0, slides.findIndex(s => s.classList.contains('is-active')));
+    let busy = false, pending = null, dead = false, timer = null, tl = null;
+    let userPaused = false, hovered = false, focused = false, visible = true;
     let touchX = null;
-    hero.addEventListener(
-        'touchstart',
-        (e) => {
-            touchX = e.changedTouches[0]?.clientX ?? null;
-        },
-        { passive: true }
-    );
-    hero.addEventListener(
-        'touchend',
-        (e) => {
-            if (touchX == null) return;
-            const dx = (e.changedTouches[0]?.clientX ?? touchX) - touchX;
-            touchX = null;
-            if (Math.abs(dx) < 48) return;
-            go(dx < 0 ? 1 : -1);
-        },
-        { passive: true }
-    );
-
-    if (canParallax) {
-        hero.addEventListener('pointermove', (e) => {
-            const rect = hero.getBoundingClientRect();
-            const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-            pointer.tx = Math.max(-1, Math.min(1, nx));
-            pointer.ty = Math.max(-1, Math.min(1, ny));
-        });
-    }
-
-    const tick = (ts) => {
-        rafId = 0;
-        if (! pageVisible || ! visible || reduced || ! canParallax) return;
-
-        const dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
-        lastTs = ts;
-
-        pointer.x += (pointer.tx - pointer.x) * Math.min(1, dt * 5.5);
-        pointer.y += (pointer.ty - pointer.y) * Math.min(1, dt * 5.5);
-
-        const active = slides[index];
-        if (! active) {
-            rafId = requestAnimationFrame(tick);
-            return;
+    const on = (target, event, fn, options) => {
+        target?.addEventListener(event, fn, options);
+        cleanups.push(() => target?.removeEventListener(event, fn, options));
+    };
+    const parts = (slide) => [slide.querySelector('.home-hero__eyebrow'),
+        ...slide.querySelectorAll('.home-hero__line'), slide.querySelector('.home-hero__body'),
+        slide.querySelector('.home-hero__actions')].filter(Boolean);
+    slides.forEach(slide => {
+        const title = slide.querySelector('[data-hero-title]');
+        if (title && !title.querySelector('.home-hero__line')) {
+            const line = document.createElement('span');
+            const wrap = document.createElement('span');
+            line.className = 'home-hero__line'; line.textContent = title.textContent.trim();
+            wrap.className = 'home-hero__line-wrap'; wrap.append(line); title.replaceChildren(wrap);
         }
-
-        parts(active).products.forEach((product) => {
-            const paraEl = product.querySelector('[data-hero-parallax]');
-            if (! paraEl) return;
-            const depth = Number(product.dataset.depth || 0.7);
-            // Grounded products: ~2–4px X, ~1–2px Y — no rotate/scale/float
-            const maxX = 2 + depth * 2;
-            const maxY = 1 + depth * 1;
-            const px = pointer.x * maxX;
-            const py = pointer.y * maxY;
-            if (Math.abs(px) < 0.03 && Math.abs(py) < 0.03) {
-                paraEl.style.transform = '';
-            } else {
-                paraEl.style.transform = `translate3d(${px}px, ${py}px, 0)`;
-            }
-        });
-
-        // Keep the loop alive only while the hero is on-screen.
-        rafId = requestAnimationFrame(tick);
-    };
-
-    const startParallaxLoop = () => {
-        if (! canParallax || rafId || ! visible || ! pageVisible || reduced) return;
-        lastTs = 0;
-        rafId = requestAnimationFrame(tick);
-    };
-
-    const stopParallaxLoop = () => {
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = 0;
-        lastTs = 0;
-    };
-
-    const io = new IntersectionObserver(
-        ([entry]) => {
-            visible = Boolean(entry?.isIntersecting);
-            if (! visible) {
-                autoplayPaused = true;
-                stopProgress();
-                stopParallaxLoop();
-            } else if (! autoplayUserPaused && pageVisible) {
-                autoplayPaused = false;
-                startProgress();
-                startParallaxLoop();
-            }
-        },
-        { threshold: 0.2 }
-    );
-    io.observe(hero);
-
-    const onVisibility = () => {
-        pageVisible = document.visibilityState === 'visible';
-        if (! pageVisible) {
-            stopProgress();
-            stopParallaxLoop();
-        } else if (visible && ! autoplayUserPaused) {
-            autoplayPaused = false;
-            startProgress();
-            startParallaxLoop();
-        }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-
-    // Boot
-    hydrateSlideImages(slides[index]);
-    hydrateBackground(index);
-    prefetchNeighbor(index);
-    settleBackground(index);
-    slides.forEach((s, i) => {
-        gsap.set(s, i === index ? { autoAlpha: 1, zIndex: 2 } : { autoAlpha: 0, zIndex: 0 });
-        setInert(s, i !== index);
-        if (i === index) resetPointerState(s);
     });
-    setEntranceStart(slides[index]);
-    if (reduced) showSettled(slides[index]);
-    else playEntrance(slides[index]);
-    updatePlayUi();
-    if (! reduced) startProgress();
-    startParallaxLoop();
-
-    return () => {
-        clearTimeout(resumeTimer);
-        stopParallaxLoop();
-        killActive();
-        stopProgress();
-        io.disconnect();
-        document.removeEventListener('visibilitychange', onVisibility);
+    const inert = (slide, value) => {
+        slide.inert = value;
+        slide.setAttribute('aria-hidden', String(value));
+        slide.querySelectorAll('a[tabindex="-1"]').forEach(a => { if (!value) a.removeAttribute('tabindex'); });
     };
+    const tone = () => {
+        const light = slides[index].dataset.heroTone === 'light';
+        hero.dataset.heroTone = light ? 'light' : 'dark';
+        hero.classList.toggle('is-tone-light', light); hero.classList.toggle('is-tone-dark', !light);
+        header?.classList.toggle('is-hero-light', light); header?.classList.toggle('is-hero-dark', !light);
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('is-active', i === index);
+            dot.setAttribute('aria-selected', String(i === index));
+            dot.tabIndex = i === index ? 0 : -1;
+        });
+    };
+    const stop = () => { clearTimeout(timer); timer = null; };
+    const schedule = () => {
+        stop();
+        if (!dead && !busy && !userPaused && !hovered && !focused && visible && !document.hidden &&
+            !media.matches && slides.length > 1) timer = setTimeout(() => go(index + 1), 7000);
+    };
+    const hydrate = async (slide) => {
+        const img = slide.querySelector('[data-hero-scene-image]');
+        if (!img) return true;
+        const source = img.dataset.src;
+        if (source) { img.src = source; delete img.dataset.src; }
+        try { await img.decode(); } catch { return img.complete && img.naturalWidth > 0; }
+        return img.naturalWidth > 0;
+    };
+    const settle = () => tracked(() => {
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('is-active', i === index);
+            slide.classList.remove('is-entering', 'is-leaving');
+            inert(slide, i !== index);
+            gsap.set(slide, {autoAlpha:i === index ? 1 : 0, zIndex:i === index ? 2 : 0});
+            gsap.set(parts(slide), {clearProps:'transform,opacity,visibility,clipPath'});
+            const image = slide.querySelector('[data-hero-scene-image]');
+            if (image) gsap.set(image, {clearProps:'transform'});
+        });
+        tone();
+    });
+    const revealCopy = (timeline, slide, at = 0) => {
+        const lines = slide.querySelectorAll('.home-hero__line');
+        if (lines.length) timeline.fromTo(lines, {yPercent:105}, {
+            yPercent:0, duration:0.7, ease:'power3.out', clearProps:'transform'}, at);
+        const secondary = [slide.querySelector('.home-hero__eyebrow'), slide.querySelector('.home-hero__body')].filter(Boolean);
+        if (secondary.length) timeline.fromTo(secondary, {opacity:0}, {
+            opacity:1, duration:0.45, stagger:0.06, clearProps:'opacity'}, at + 0.08);
+        // The CTA remains visible and clickable throughout the entrance.
+    };
+    const go = async (requested) => {
+        const next = (requested + slides.length) % slides.length;
+        if (busy) { pending = next; return; }
+        if (next === index || dead) return;
+        busy = true; stop(); tl?.kill(); settle();
+        const loaded = await hydrate(slides[next]);
+        if (dead) return;
+        if (!loaded) { busy = false; pending = null; schedule(); return; }
+        const current = slides[index], incoming = slides[next];
+        const finish = () => {
+            index = next; busy = false; settle();
+            if (live) live.textContent = incoming.querySelector('[data-hero-title]')?.textContent || '';
+            const queued = pending; pending = null;
+            if (queued !== null && queued !== index) go(queued); else schedule();
+            hydrate(slides[(index + 1) % slides.length]);
+        };
+        if (media.matches) { finish(); return; }
+        tracked(() => {
+            incoming.classList.add('is-entering');
+            gsap.set(incoming, {autoAlpha:0, zIndex:3});
+            // Current remains opaque beneath incoming: no exposed green surface.
+            tl = gsap.timeline({onComplete:finish});
+            tl.to(incoming, {autoAlpha:1, duration:0.65, ease:'sine.inOut'}, 0);
+            const img = incoming.querySelector('[data-hero-scene-image]');
+            if (img) tl.fromTo(img, {scale:1.025}, {scale:1, duration:1.1, ease:'power2.out', clearProps:'transform'}, 0);
+            revealCopy(tl, incoming, 0.18);
+        });
+    };
+    const playUi = () => {
+        play?.setAttribute('aria-pressed', String(userPaused));
+        play?.setAttribute('aria-label', userPaused ? 'Play automatic slideshow' : 'Pause automatic slideshow');
+        const pauseIcon = play?.querySelector('.is-pause'), playIcon = play?.querySelector('.is-play');
+        if (pauseIcon) pauseIcon.hidden = userPaused;
+        if (playIcon) playIcon.hidden = !userPaused;
+    };
+    on(hero.querySelector('[data-hero-next]'), 'click', () => go((pending ?? index) + 1));
+    on(hero.querySelector('[data-hero-prev]'), 'click', () => go((pending ?? index) - 1));
+    dots.forEach((dot, i) => on(dot, 'click', () => go(i)));
+    on(play, 'click', () => { userPaused = !userPaused; playUi(); schedule(); });
+    on(hero, 'mouseenter', () => { hovered = true; stop(); });
+    on(hero, 'mouseleave', () => { hovered = false; schedule(); });
+    on(hero, 'focusin', () => { focused = true; stop(); });
+    on(hero, 'focusout', e => { if (!hero.contains(e.relatedTarget)) { focused = false; schedule(); } });
+    on(hero, 'keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            e.preventDefault(); go((pending ?? index) + (e.key === 'ArrowRight' ? 1 : -1));
+        }
+    });
+    on(hero, 'touchstart', e => { touchX = e.changedTouches[0]?.clientX ?? null; }, {passive:true});
+    on(hero, 'touchend', e => {
+        const dx = (e.changedTouches[0]?.clientX ?? touchX) - touchX;
+        if (touchX !== null && Math.abs(dx) > 48) go(index + (dx < 0 ? 1 : -1));
+        touchX = null;
+    }, {passive:true});
+    on(document, 'visibilitychange', schedule);
+    on(media, 'change', () => { tl?.progress(1); settle(); schedule(); });
+    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; schedule(); }, {threshold:0.15});
+    io.observe(hero);
+    settle(); playUi();
+    tracked(() => {
+        if (!prefersReducedMotion()) {
+            tl = gsap.timeline();
+            const img = slides[index].querySelector('[data-hero-scene-image]');
+            if (img) tl.fromTo(img, {scale:1.035}, {scale:1, duration:1.2, ease:'power2.out', clearProps:'transform'}, 0);
+            revealCopy(tl, slides[index], 0.12);
+        }
+        if (controls) gsap.set(controls, {autoAlpha:1, clearProps:'transform'});
+    });
+    hydrate(slides[(index + 1) % slides.length]); schedule();
+    return () => { dead = true; stop(); tl?.kill(); io.disconnect(); cleanups.forEach(fn => fn()); ctx.revert(); };
 }

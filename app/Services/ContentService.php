@@ -174,13 +174,110 @@ class ContentService
     }
 
     /**
-     * Premium homepage hero slides — text left, floating product PNGs right.
+     * Premium homepage hero slides — full campaign scenes with live HTML copy.
+     *
+     * Optional CMS override: homepage_sections.config.slides[] may supply
+     * scene / scene_mobile paths (media library relative paths), tone, and copy.
      *
      * @return Collection<int, array<string, mixed>>
      */
     public function heroSlides(?HomepageSection $hero = null): Collection
     {
-        return collect($this->premiumHeroSlides())->values();
+        $defaults = $this->premiumHeroSlides();
+        $configured = $hero?->config['slides'] ?? null;
+
+        // Legacy CMS slides stored cutout `products[]` layers — ignore those and use campaign defaults.
+        if (! is_array($configured) || $configured === [] || ! $this->hasCampaignSceneSlides($configured)) {
+            return collect($defaults)->values();
+        }
+
+        $merged = [];
+        foreach ($configured as $index => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $base = $defaults[$index] ?? $defaults[0] ?? [
+                'eyebrow' => 'Supplify',
+                'title' => config('app.name'),
+                'body' => '',
+                'cta_label' => 'Shop Supplements',
+                'cta_url' => '/shop',
+                'tone' => 'dark',
+                'scene' => '',
+                'scene_mobile' => '',
+                'scene_alt' => 'Supplify products',
+                'width' => 1920,
+                'height' => 900,
+                'mobile_width' => 1080,
+                'mobile_height' => 1350,
+            ];
+
+            $scene = $this->resolveHeroScenePath($row['scene'] ?? $row['image'] ?? null) ?? ($base['scene_path'] ?? null);
+            $sceneMobile = $this->resolveHeroScenePath($row['scene_mobile'] ?? $row['image_mobile'] ?? null)
+                ?? ($base['scene_mobile_path'] ?? $scene);
+
+            if (! $scene) {
+                continue;
+            }
+
+            $merged[] = [
+                'eyebrow' => (string) ($row['eyebrow'] ?? $base['eyebrow'] ?? ''),
+                'title' => (string) ($row['title'] ?? $base['title'] ?? config('app.name')),
+                'body' => (string) ($row['body'] ?? $base['body'] ?? ''),
+                'cta_label' => (string) ($row['cta_label'] ?? $base['cta_label'] ?? ''),
+                'cta_url' => (string) ($row['cta_url'] ?? $base['cta_url'] ?? '/shop'),
+                'product_sku' => $row['product_sku'] ?? ($base['product_sku'] ?? null),
+                'tone' => (($row['tone'] ?? $base['tone'] ?? 'dark') === 'light') ? 'light' : 'dark',
+                'scene' => $this->versionedAsset($scene),
+                'scene_mobile' => $this->versionedAsset($sceneMobile ?: $scene),
+                'scene_alt' => (string) ($row['scene_alt'] ?? $base['scene_alt'] ?? 'Supplify products'),
+                'focus' => (string) ($row['focus'] ?? $base['focus'] ?? '70% center'),
+                'width' => (int) ($row['width'] ?? $base['width'] ?? 1905),
+                'height' => (int) ($row['height'] ?? $base['height'] ?? 732),
+                'mobile_width' => (int) ($row['mobile_width'] ?? $base['mobile_width'] ?? $base['width'] ?? 1905),
+                'mobile_height' => (int) ($row['mobile_height'] ?? $base['mobile_height'] ?? $base['height'] ?? 732),
+            ];
+        }
+
+        return collect($merged !== [] ? $merged : $defaults)->values();
+    }
+
+    /**
+     * @param  list<mixed>  $slides
+     */
+    private function hasCampaignSceneSlides(array $slides): bool
+    {
+        foreach ($slides as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            if ($this->resolveHeroScenePath($row['scene'] ?? $row['image'] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function resolveHeroScenePath(mixed $path): ?string
+    {
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        $path = ltrim(str_replace('\\', '/', trim($path)), '/');
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return null;
+        }
+
+        if (is_file(public_path($path))) {
+            return $path;
+        }
+
+        return null;
     }
 
     public function findPublishedPage(string $slug): Page
@@ -219,7 +316,7 @@ class ContentService
             [
                 'key' => 'hero',
                 'title' => 'Formulas you can read',
-                'subtitle' => 'US Supplement Co.',
+                'subtitle' => 'Supplify',
                 'body' => 'Clean formulas. Clear labels. Built for people who take supplements seriously.',
                 'cta_label' => 'Shop catalog',
                 'cta_url' => '/shop',
@@ -234,7 +331,7 @@ class ContentService
                     'items' => [
                         ['title' => 'Transparent labels', 'body' => 'Amounts you can verify at a glance.', 'icon' => 'label'],
                         ['title' => 'Thoughtful forms', 'body' => 'Ingredients chosen for clarity, not hype.', 'icon' => 'flask'],
-                        ['title' => 'US-focused fulfillment', 'body' => 'Shipping designed around domestic routines.', 'icon' => 'package'],
+                        ['title' => 'Careful fulfillment', 'body' => 'Orders prepared for reliable domestic delivery.', 'icon' => 'package'],
                     ],
                 ],
                 'is_enabled' => true,
@@ -286,7 +383,7 @@ class ContentService
                         ['label' => '01', 'title' => 'Ingredient selection', 'body' => 'We evaluate ingredients for clarity of purpose and fit within a daily routine.', 'icon' => 'leaf'],
                         ['label' => '02', 'title' => 'Formulation', 'body' => 'Formulas are drafted for readable labels and practical serving sizes.', 'icon' => 'flask'],
                         ['label' => '03', 'title' => 'Manufacturing & checks', 'body' => 'Production partners follow agreed quality checks before products ship.', 'icon' => 'shield'],
-                        ['label' => '04', 'title' => 'Packaging & delivery', 'body' => 'Finished goods are packed for US-focused fulfillment and careful transit.', 'icon' => 'package'],
+                        ['label' => '04', 'title' => 'Packaging & delivery', 'body' => 'Finished goods are packed for careful transit to your door.', 'icon' => 'package'],
                     ],
                 ],
                 'is_enabled' => true,
@@ -317,114 +414,94 @@ class ContentService
     }
 
     /**
+     * Canonical lifestyle hero slides (complete banners; no cutout product layers).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function defaultHeroSlideDefinitions(): array
+    {
+        return [
+            [
+                'eyebrow' => 'Vitamin E',
+                'title' => 'Vitamin E 400 IU',
+                'body' => 'A clear-label softgel formula for everyday routines.',
+                'cta_label' => 'Shop Vitamin E',
+                'cta_url' => '/products/vitamin-e-400iu-120-softgels',
+                'product_sku' => 'SUP-VITAMIN-E-400IU-120',
+                'tone' => 'dark',
+                'scene' => 'images/homepage/hero-lifestyle-vitamins.webp',
+                'scene_mobile' => 'images/homepage/hero-lifestyle-vitamins.webp',
+                'scene_alt' => 'Person holding Supplify Vitamin E 400 IU in a bright kitchen',
+                'focus' => '68% center',
+                'width' => 1905,
+                'height' => 732,
+            ],
+            [
+                'eyebrow' => 'Minerals',
+                'title' => 'Magnesium 250mg',
+                'body' => 'A straightforward mineral essential for daily wellness routines.',
+                'cta_label' => 'Shop Magnesium',
+                'cta_url' => '/products/magnesium-250mg-90-tablets',
+                'product_sku' => 'SUP-MAGNESIUM-250MG-90',
+                'tone' => 'dark',
+                'scene' => 'images/homepage/hero-lifestyle-magnesium.webp',
+                'scene_mobile' => 'images/homepage/hero-lifestyle-magnesium.webp',
+                'scene_alt' => 'Person with Supplify Magnesium 250mg on a side table',
+                'focus' => '72% center',
+                'width' => 1905,
+                'height' => 732,
+            ],
+            [
+                'eyebrow' => 'Essentials',
+                'title' => 'CoQ10 200mg',
+                'body' => 'A focused formula with a transparent label for your collection.',
+                'cta_label' => 'Shop CoQ10',
+                'cta_url' => '/products/coq10-200mg-120-softgels',
+                'product_sku' => 'SUP-COQ10-200MG-120',
+                'tone' => 'dark',
+                'scene' => 'images/homepage/hero-lifestyle-coq10.webp',
+                'scene_mobile' => 'images/homepage/hero-lifestyle-coq10.webp',
+                'scene_alt' => 'Hands holding Supplify CoQ10 200mg on a sunlit table',
+                'focus' => '78% center',
+                'width' => 1905,
+                'height' => 732,
+            ],
+        ];
+    }
+
+    /**
+     * Finished lifestyle banners (products already in-scene). No cutout layers.
+     *
      * @return list<array<string, mixed>>
      */
     private function premiumHeroSlides(): array
     {
-        $shop = '/shop';
+        return array_map(function (array $slide) {
+            $desktop = $slide['scene'];
+            $mobile = $slide['scene_mobile'] ?? $desktop;
+            $w = (int) ($slide['width'] ?? 1905);
+            $h = (int) ($slide['height'] ?? 732);
 
-        return [
-            [
-                'eyebrow' => 'Supplify',
-                'title' => 'Build your daily wellness routine',
-                'body' => 'Explore supplements that fit your everyday routine.',
-                'cta_label' => 'Shop Supplements',
-                'cta_url' => $shop,
-                'slide_number' => '01',
-                'background' => $this->versionedAsset('images/supplify-slide-1-fitness.webp'),
-                'background_alt' => 'Fitness studio',
-                'products' => [
-                    [
-                        'name' => 'Vitamin E',
-                        'src' => $this->versionedAsset('images/products/1S5A6197.png'),
-                        'width' => 426,
-                        'height' => 740,
-                        'role' => 'support-left',
-                        'depth' => 0.55,
-                    ],
-                    [
-                        'name' => 'Vitamin B-50 Complex',
-                        'src' => $this->versionedAsset('images/products/1S5A6200_1.png'),
-                        'width' => 400,
-                        'height' => 801,
-                        'role' => 'foreground',
-                        'depth' => 1,
-                    ],
-                    [
-                        'name' => 'L-Carnitine',
-                        'src' => $this->versionedAsset('images/products/1S5A4428.png'),
-                        'width' => 414,
-                        'height' => 758,
-                        'role' => 'support-right',
-                        'depth' => 0.7,
-                    ],
-                ],
-            ],
-            [
-                'eyebrow' => 'Essentials',
-                'title' => 'Make room for everyday essentials',
-                'body' => 'Discover our mineral collection and find your next essential.',
-                'cta_label' => 'Explore Minerals',
-                'cta_url' => $shop,
-                'slide_number' => '02',
-                'background' => $this->versionedAsset('images/supplify-slide-2-nutrition.webp'),
-                'background_alt' => 'Healthy nutrition',
-                'products' => [
-                    [
-                        'name' => 'Magnesium',
-                        'src' => $this->versionedAsset('images/products/1S5A3686.png'),
-                        'width' => 403,
-                        'height' => 740,
-                        'role' => 'foreground',
-                        'depth' => 1,
-                    ],
-                    [
-                        'name' => 'Calcium Citrate',
-                        'src' => $this->versionedAsset('images/products/1S5A3688.png'),
-                        'width' => 393,
-                        'height' => 729,
-                        'role' => 'support-right',
-                        'depth' => 0.65,
-                    ],
-                ],
-            ],
-            [
-                'eyebrow' => 'Collection',
-                'title' => 'Discover your next essential',
-                'body' => 'Browse the Supplify collection and choose your next addition.',
-                'cta_label' => 'Explore the Collection',
-                'cta_url' => $shop,
-                'slide_number' => '03',
-                'background' => $this->versionedAsset('images/supplify-slide-3-active-life.webp'),
-                'background_alt' => 'Outdoor active lifestyle',
-                'products' => [
-                    [
-                        'name' => 'CoQ10',
-                        'src' => $this->versionedAsset('images/products/1S5A6193.png'),
-                        'width' => 441,
-                        'height' => 773,
-                        'role' => 'support-left',
-                        'depth' => 0.55,
-                    ],
-                    [
-                        'name' => 'NADH',
-                        'src' => $this->versionedAsset('images/products/1S5A6199.png'),
-                        'width' => 423,
-                        'height' => 845,
-                        'role' => 'foreground',
-                        'depth' => 1,
-                    ],
-                    [
-                        'name' => 'Rutin',
-                        'src' => $this->versionedAsset('images/products/1S5A6201_1.png'),
-                        'width' => 422,
-                        'height' => 843,
-                        'role' => 'support-right',
-                        'depth' => 0.7,
-                    ],
-                ],
-            ],
-        ];
+            return [
+                'eyebrow' => $slide['eyebrow'],
+                'title' => $slide['title'],
+                'body' => $slide['body'],
+                'cta_label' => $slide['cta_label'],
+                'cta_url' => $slide['cta_url'],
+                'product_sku' => $slide['product_sku'] ?? null,
+                'tone' => $slide['tone'],
+                'scene_path' => $desktop,
+                'scene_mobile_path' => $mobile,
+                'scene' => $this->versionedAsset($desktop),
+                'scene_mobile' => $this->versionedAsset($mobile),
+                'scene_alt' => $slide['scene_alt'],
+                'focus' => $slide['focus'] ?? '70% center',
+                'width' => $w,
+                'height' => $h,
+                'mobile_width' => $w,
+                'mobile_height' => $h,
+            ];
+        }, $this->defaultHeroSlideDefinitions());
     }
 
     private function versionedAsset(string $path): string

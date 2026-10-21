@@ -13,19 +13,13 @@
             <p class="admin-panel__intro">Save your changes and control visibility.</p>
         </header>
         <div class="admin-panel__body space-y-4">
-            <label class="flex cursor-pointer items-start gap-3 rounded-[var(--radius-control)] border border-line bg-surface p-3">
-                <input
-                    type="checkbox"
-                    name="is_published"
-                    value="1"
-                    class="mt-0.5 size-4 rounded border-line text-brand focus:ring-brand/30"
-                    @checked((bool) old('is_published', $page->is_published))
-                >
-                <span class="min-w-0">
-                    <span class="block text-sm font-semibold text-ink">Published</span>
-                    <span class="mt-0.5 block text-xs text-ink-muted">Visible on the storefront when enabled.</span>
-                </span>
-            </label>
+            <x-checkbox
+                name="is_published"
+                value="1"
+                label="Published"
+                help="Visible on the storefront when enabled."
+                :checked="(bool) old('is_published', $page->is_published)"
+            />
 
             <x-button type="submit" variant="primary" class="admin-page-editor__aside-save w-full justify-center">
                 {{ $submitLabel }}
@@ -55,11 +49,14 @@
             <h2 class="admin-panel__title">Page settings</h2>
         </header>
         <div class="admin-panel__body space-y-4">
-            <div>
-                <x-label for="slug">Slug</x-label>
-                <x-input id="slug" name="slug" :value="old('slug', $page->slug)" placeholder="auto-from-title" />
-                <p class="ui-help">Used in the URL. Leave blank to generate from the title.</p>
-            </div>
+            <x-input
+                id="slug"
+                name="slug"
+                label="Slug"
+                :value="old('slug', $page->slug)"
+                placeholder="auto-from-title"
+                help="Used in the URL. Leave blank to generate from the title."
+            />
 
             @if ($isEdit)
                 <dl class="admin-page-meta">
@@ -88,14 +85,8 @@
             <span class="admin-panel__summary-hint">Optional search metadata</span>
         </summary>
         <div class="admin-panel__body space-y-4 border-t border-line pt-4">
-            <div>
-                <x-label for="seo_title">SEO title</x-label>
-                <x-input id="seo_title" name="seo_title" :value="old('seo_title', $page->seo_title)" />
-            </div>
-            <div>
-                <x-label for="seo_description">SEO description</x-label>
-                <x-textarea id="seo_description" name="seo_description" rows="3">{{ old('seo_description', $page->seo_description) }}</x-textarea>
-            </div>
+            <x-input id="seo_title" name="seo_title" label="SEO title" :value="old('seo_title', $page->seo_title)" />
+            <x-textarea id="seo_description" name="seo_description" label="SEO description" rows="3">{{ old('seo_description', $page->seo_description) }}</x-textarea>
         </div>
     </details>
 </div>

@@ -102,27 +102,31 @@
                 @csrf
                 @method('PUT')
 
-                <x-select label="Order status" name="status" required>
-                    @foreach ($statuses as $status)
-                        <option value="{{ $status->value }}" @selected(old('status', $order->status->value) === $status->value)>{{ $status->label() }}</option>
-                    @endforeach
-                </x-select>
+                <div class="admin-form-grid admin-form-grid--stack">
+                    <x-select label="Order status" name="status" required>
+                        @foreach ($statuses as $status)
+                            <option value="{{ $status->value }}" @selected(old('status', $order->status->value) === $status->value)>{{ $status->label() }}</option>
+                        @endforeach
+                    </x-select>
 
-                <x-select label="Payment status" name="payment_status" required>
-                    @foreach ($paymentStatuses as $status)
-                        <option value="{{ $status->value }}" @selected(old('payment_status', $order->payment_status->value) === $status->value)>{{ $status->label() }}</option>
-                    @endforeach
-                </x-select>
+                    <x-select label="Payment status" name="payment_status" required>
+                        @foreach ($paymentStatuses as $status)
+                            <option value="{{ $status->value }}" @selected(old('payment_status', $order->payment_status->value) === $status->value)>{{ $status->label() }}</option>
+                        @endforeach
+                    </x-select>
 
-                <x-select label="Fulfillment" name="fulfillment_status" required>
-                    @foreach ($fulfillmentStatuses as $status)
-                        <option value="{{ $status->value }}" @selected(old('fulfillment_status', $order->fulfillment_status->value) === $status->value)>{{ $status->label() }}</option>
-                    @endforeach
-                </x-select>
+                    <x-select label="Fulfillment" name="fulfillment_status" required>
+                        @foreach ($fulfillmentStatuses as $status)
+                            <option value="{{ $status->value }}" @selected(old('fulfillment_status', $order->fulfillment_status->value) === $status->value)>{{ $status->label() }}</option>
+                        @endforeach
+                    </x-select>
 
-                <x-textarea label="Internal note" name="note" rows="3" placeholder="Optional note for history">{{ old('note') }}</x-textarea>
+                    <x-textarea label="Internal note" name="note" rows="3" placeholder="Optional note for history">{{ old('note') }}</x-textarea>
+                </div>
 
-                <x-button type="submit" variant="primary" class="w-full">Save changes</x-button>
+                <div class="admin-form__actions">
+                    <x-button type="submit" variant="primary" class="w-full sm:w-auto">Save changes</x-button>
+                </div>
             </form>
         </x-card>
     </div>

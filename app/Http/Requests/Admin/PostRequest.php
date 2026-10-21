@@ -30,6 +30,7 @@ class PostRequest extends FormRequest
             'tags' => ['nullable', 'string', 'max:500'],
             'featured_image' => ['nullable', 'string', 'max:500'],
             'is_published' => ['sometimes', 'boolean'],
+            'is_featured' => ['sometimes', 'boolean'],
             'seo_title' => ['nullable', 'string', 'max:180'],
             'seo_description' => ['nullable', 'string', 'max:320'],
         ];
@@ -39,6 +40,7 @@ class PostRequest extends FormRequest
     {
         $merge = [
             'is_published' => $this->boolean('is_published'),
+            'is_featured' => $this->boolean('is_featured'),
             'post_category_id' => $this->filled('post_category_id') ? $this->input('post_category_id') : null,
         ];
 

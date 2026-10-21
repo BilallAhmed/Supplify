@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', config('app.name'))</title>
-    <meta name="description" content="@yield('meta_description', 'Premium US dietary supplements. Clean formulas, transparent labels, science-led wellness.')">
+    <meta name="description" content="@yield('meta_description', 'Science-led dietary supplements. Clean formulas, transparent labels, everyday wellness.')">
     <link rel="canonical" href="@yield('canonical', url()->current())">
 
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
@@ -20,7 +20,7 @@
 
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:title" content="@yield('og_title', trim($__env->yieldContent('title', config('app.name'))))">
-    <meta property="og:description" content="@yield('og_description', trim($__env->yieldContent('meta_description', 'Premium US dietary supplements.')))">
+    <meta property="og:description" content="@yield('og_description', trim($__env->yieldContent('meta_description', 'Science-led dietary supplements.')))">
     <meta property="og:url" content="@yield('canonical', url()->current())">
     <meta property="og:site_name" content="{{ config('app.name') }}">
     @hasSection('og_image')
@@ -29,19 +29,23 @@
 
     <meta name="twitter:card" content="{{ $__env->hasSection('og_image') ? 'summary_large_image' : 'summary' }}">
     <meta name="twitter:title" content="@yield('og_title', trim($__env->yieldContent('title', config('app.name'))))">
-    <meta name="twitter:description" content="@yield('og_description', trim($__env->yieldContent('meta_description', 'Premium US dietary supplements.')))">
+    <meta name="twitter:description" content="@yield('og_description', trim($__env->yieldContent('meta_description', 'Science-led dietary supplements.')))">
     @hasSection('og_image')
         <meta name="twitter:image" content="@yield('og_image')">
     @endif
 
+    @include('storefront.partials.tracking-head')
+
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:400,500,600,700,800" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('head')
 </head>
 <body class="flex min-h-screen flex-col" x-data>
+    @include('storefront.partials.tracking-body-start')
+
     <a
         href="#main-content"
         class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-[var(--radius-control)] focus:bg-brand focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
@@ -87,5 +91,6 @@
 
     @livewireScripts
     @stack('scripts')
+    @include('storefront.partials.tracking-body-end')
 </body>
 </html>

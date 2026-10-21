@@ -27,65 +27,67 @@
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div class="min-w-0 space-y-4">
-            <div class="overflow-x-auto rounded-[var(--radius-panel)] border border-line bg-surface-elevated">
-                <div class="flex min-w-max gap-1 p-2" role="tablist" aria-label="Product sections">
-                    <template x-for="item in tabs" :key="item.id">
-                        <button
-                            type="button"
-                            role="tab"
-                            class="rounded-[var(--radius-control)] px-3 py-2 text-sm font-medium transition"
-                            :class="tab === item.id ? 'bg-brand text-white' : 'text-ink-muted hover:bg-brand-mist hover:text-ink'"
-                            :aria-selected="tab === item.id"
-                            @click="tab = item.id"
-                            x-text="item.label"
-                        ></button>
-                    </template>
-                </div>
+            <div class="admin-tabs" role="tablist" aria-label="Product sections">
+                <template x-for="item in tabs" :key="item.id">
+                    <button
+                        type="button"
+                        role="tab"
+                        class="admin-tabs__btn"
+                        :class="tab === item.id ? 'is-active' : ''"
+                        :aria-selected="tab === item.id"
+                        @click="tab = item.id"
+                        x-text="item.label"
+                    ></button>
+                </template>
             </div>
 
             {{-- General --}}
             <x-card class="space-y-4" x-show="tab === 'general'" x-cloak>
-                <h2 class="font-display text-lg font-bold text-ink">General information</h2>
-                <x-input label="Product name" name="name" required :value="old('name', $product->name)" help="Shown on the storefront and in carts." />
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="admin-form__section-head">
+                    <h2 class="admin-form__section-title">General information</h2>
+                    <p class="admin-form__section-desc">Core catalog fields shown on the storefront and in carts.</p>
+                </div>
+                <div class="admin-form-grid">
+                    <x-input label="Product name" name="name" required class="ui-field--full" :value="old('name', $product->name)" help="Shown on the storefront and in carts." />
                     <x-input label="SKU" name="sku" required :value="old('sku', $product->sku)" help="Must be unique across products and variations." />
                     <x-input label="Slug" name="slug" help="Optional — generated from the name if empty." :value="old('slug', $product->slug)" />
+                    <x-select label="Product type" name="product_type" class="ui-field--full" x-model="productType" help="Switching type does not delete saved variations.">
+                        <option value="simple" @selected(old('product_type', $product->product_type?->value ?? 'simple') === 'simple')>Simple product</option>
+                        <option value="variable" @selected(old('product_type', $product->product_type?->value ?? 'simple') === 'variable')>Variable product</option>
+                    </x-select>
+                    <x-textarea label="Short description" name="short_description" rows="2" help="Used on cards and under the title.">{{ old('short_description', $product->short_description) }}</x-textarea>
+                    <x-textarea label="Full description" name="description" rows="6">{{ old('description', $product->description) }}</x-textarea>
                 </div>
-                <x-select label="Product type" name="product_type" x-model="productType" help="Switching type does not delete saved variations.">
-                    <option value="simple" @selected(old('product_type', $product->product_type?->value ?? 'simple') === 'simple')>Simple product</option>
-                    <option value="variable" @selected(old('product_type', $product->product_type?->value ?? 'simple') === 'variable')>Variable product</option>
-                </x-select>
-                <x-textarea label="Short description" name="short_description" rows="2" help="Used on cards and under the title.">{{ old('short_description', $product->short_description) }}</x-textarea>
-                <x-textarea label="Full description" name="description" rows="6">{{ old('description', $product->description) }}</x-textarea>
             </x-card>
 
             {{-- Pricing & inventory --}}
             <x-card class="space-y-4" x-show="tab === 'pricing'" x-cloak>
-                <h2 class="font-display text-lg font-bold text-ink">Pricing & inventory</h2>
+                <div class="admin-form__section-head">
+                    <h2 class="admin-form__section-title">Pricing & inventory</h2>
+                    <p class="admin-form__section-desc">Catalog price, sale windows, and stock tracking.</p>
+                </div>
                 <p x-show="isVariable()" x-cloak class="text-sm text-ink-muted">
                     Variation-level price and stock are authoritative for variable products. Parent fields below are catalog defaults only.
                 </p>
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="admin-form-grid">
                     <x-input label="Regular price (USD)" name="price" type="number" step="0.01" min="0" :value="old('price', $price)" help="Required for simple products; optional display fallback for variable." />
-                    <div x-show="!isVariable()">
+                    <div x-show="!isVariable()" class="min-w-0">
                         <x-input label="Sale price (USD)" name="sale_price" type="number" step="0.01" min="0" :value="old('sale_price', $salePrice)" help="Optional. Must be lower than regular price." />
                     </div>
                     <template x-if="isVariable()">
                         <input type="hidden" name="sale_price" value="">
                     </template>
                 </div>
-                <div class="grid gap-4 sm:grid-cols-2" x-show="!isVariable()">
+                <div class="admin-form-grid" x-show="!isVariable()">
                     <x-input label="Sale starts" name="sale_starts_at" type="datetime-local" :value="old('sale_starts_at', optional($product->sale_starts_at)?->format('Y-m-d\TH:i'))" />
                     <x-input label="Sale ends" name="sale_ends_at" type="datetime-local" :value="old('sale_ends_at', optional($product->sale_ends_at)?->format('Y-m-d\TH:i'))" />
                 </div>
                 <template x-if="!isVariable()">
-                    <div class="space-y-4">
+                    <div class="admin-form-grid">
                         <input type="hidden" name="manage_stock" value="0">
                         <x-checkbox name="manage_stock" value="1" label="Track inventory for this product" :checked="(bool) old('manage_stock', $product->manage_stock ?? true)" />
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <x-input label="Stock quantity" name="stock_quantity" type="number" min="0" :value="old('stock_quantity', $product->stock_quantity ?? 0)" />
-                            <x-input label="Low-stock threshold" name="low_stock_threshold" type="number" min="0" required :value="old('low_stock_threshold', $product->low_stock_threshold ?? 5)" />
-                        </div>
+                        <x-input label="Stock quantity" name="stock_quantity" type="number" min="0" :value="old('stock_quantity', $product->stock_quantity ?? 0)" />
+                        <x-input label="Low-stock threshold" name="low_stock_threshold" type="number" min="0" required :value="old('low_stock_threshold', $product->low_stock_threshold ?? 5)" />
                         <input type="hidden" name="allow_backorder" value="0">
                         <x-checkbox name="allow_backorder" value="1" label="Allow backorders when out of stock" :checked="(bool) old('allow_backorder', $product->allow_backorder ?? false)" />
                     </div>
@@ -102,39 +104,40 @@
 
             {{-- Shipping --}}
             <x-card class="space-y-4" x-show="tab === 'shipping'" x-cloak>
-                <h2 class="font-display text-lg font-bold text-ink">Shipping</h2>
-                <input type="hidden" name="requires_shipping" value="0">
-                <x-checkbox
-                    name="requires_shipping"
-                    value="1"
-                    label="This product requires shipping"
-                    :checked="(bool) old('requires_shipping', $product->requires_shipping ?? true)"
-                    help="Digital / non-shippable items can leave this unchecked."
-                />
-                <x-select label="Shipping class" name="shipping_class" help="Optional class for carrier rules.">
-                    <option value="">— None —</option>
-                    @foreach ($shippingClasses as $key => $label)
-                        <option value="{{ $key }}" @selected(old('shipping_class', $product->shipping_class) === $key)>{{ $label }}</option>
-                    @endforeach
-                </x-select>
-                <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
+                <div class="admin-form__section-head">
+                    <h2 class="admin-form__section-title">Shipping</h2>
+                    <p class="admin-form__section-desc">Weight, dimensions, and whether this SKU needs fulfillment.</p>
+                </div>
+                <div class="admin-form-grid">
+                    <input type="hidden" name="requires_shipping" value="0">
+                    <x-checkbox
+                        name="requires_shipping"
+                        value="1"
+                        label="This product requires shipping"
+                        :checked="(bool) old('requires_shipping', $product->requires_shipping ?? true)"
+                        help="Digital / non-shippable items can leave this unchecked."
+                    />
+                    <x-select label="Shipping class" name="shipping_class" help="Optional class for carrier rules.">
+                        <option value="">— None —</option>
+                        @foreach ($shippingClasses as $key => $label)
+                            <option value="{{ $key }}" @selected(old('shipping_class', $product->shipping_class) === $key)>{{ $label }}</option>
+                        @endforeach
+                    </x-select>
                     <x-input label="Weight" name="weight" type="number" step="0.001" min="0" :value="old('weight', $weightValue)" help="Leave blank if unknown. Zero means a genuine zero weight." />
                     <x-select label="Unit" name="weight_unit">
                         @foreach ($weightUnits as $unit)
                             <option value="{{ $unit }}" @selected(old('weight_unit', $weightUnit) === $unit)>{{ $unit }}</option>
                         @endforeach
                     </x-select>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-3">
                     <x-input label="Length" name="length" type="number" step="0.001" min="0" :value="old('length', $lengthValue)" />
                     <x-input label="Width" name="width" type="number" step="0.001" min="0" :value="old('width', $widthValue)" />
                     <x-input label="Height" name="height" type="number" step="0.001" min="0" :value="old('height', $heightValue)" />
+                    <x-select label="Dimension unit" name="dimension_unit">
+                        @foreach ($dimensionUnits as $unit)
+                            <option value="{{ $unit }}" @selected(old('dimension_unit', $dimensionUnit) === $unit)>{{ $unit }}</option>
+                        @endforeach
+                    </x-select>
                 </div>
-                <x-select label="Dimension unit" name="dimension_unit">
-                    @foreach ($dimensionUnits as $unit)
-                        <option value="{{ $unit }}" @selected(old('dimension_unit', $dimensionUnit) === $unit)>{{ $unit }}</option>
-                    @endforeach
-                </x-select>
                 <p class="text-xs text-ink-subtle">Stored as whole grams / millimeters to avoid floating-point drift. Weight-based shipping will not invent rates when weight is missing.</p>
             </x-card>
 
@@ -267,12 +270,17 @@
 
             {{-- Specs --}}
             <x-card class="space-y-4" x-show="tab === 'details'" x-cloak>
-                <h2 class="font-display text-lg font-bold text-ink">Specifications, benefits & ingredients</h2>
-                <x-textarea label="Benefits" name="benefits" rows="3">{{ old('benefits', $product->benefits) }}</x-textarea>
-                <x-textarea label="Ingredients" name="ingredients" rows="3">{{ old('ingredients', $product->ingredients) }}</x-textarea>
-                <x-textarea label="Supplement facts / specifications" name="supplement_facts" rows="4">{{ old('supplement_facts', $product->supplement_facts) }}</x-textarea>
-                <x-textarea label="Directions / usage" name="directions" rows="3">{{ old('directions', $product->directions) }}</x-textarea>
-                <x-textarea label="Warnings" name="warnings" rows="3">{{ old('warnings', $product->warnings) }}</x-textarea>
+                <div class="admin-form__section-head">
+                    <h2 class="admin-form__section-title">Specifications, benefits & ingredients</h2>
+                    <p class="admin-form__section-desc">Editorial product details shown on the product page.</p>
+                </div>
+                <div class="admin-form-grid">
+                    <x-textarea label="Benefits" name="benefits" rows="3">{{ old('benefits', $product->benefits) }}</x-textarea>
+                    <x-textarea label="Ingredients" name="ingredients" rows="3">{{ old('ingredients', $product->ingredients) }}</x-textarea>
+                    <x-textarea label="Supplement facts / specifications" name="supplement_facts" rows="4">{{ old('supplement_facts', $product->supplement_facts) }}</x-textarea>
+                    <x-textarea label="Directions / usage" name="directions" rows="3">{{ old('directions', $product->directions) }}</x-textarea>
+                    <x-textarea label="Warnings" name="warnings" rows="3">{{ old('warnings', $product->warnings) }}</x-textarea>
+                </div>
             </x-card>
 
             {{-- Media --}}
@@ -337,9 +345,14 @@
 
             {{-- SEO --}}
             <x-card class="space-y-4" x-show="tab === 'seo'" x-cloak>
-                <h2 class="font-display text-lg font-bold text-ink">SEO</h2>
-                <x-input label="SEO title" name="seo_title" :value="old('seo_title', $product->seo_title)" help="Defaults to the product name on the storefront." />
-                <x-textarea label="SEO description" name="seo_description" rows="3">{{ old('seo_description', $product->seo_description) }}</x-textarea>
+                <div class="admin-form__section-head">
+                    <h2 class="admin-form__section-title">SEO</h2>
+                    <p class="admin-form__section-desc">Optional search metadata for product landing pages.</p>
+                </div>
+                <div class="admin-form-grid">
+                    <x-input label="SEO title" name="seo_title" :value="old('seo_title', $product->seo_title)" help="Defaults to the product name on the storefront." />
+                    <x-textarea label="SEO description" name="seo_description" rows="3">{{ old('seo_description', $product->seo_description) }}</x-textarea>
+                </div>
             </x-card>
         </div>
 
@@ -360,7 +373,7 @@
                         <option value="{{ $value }}" @selected(old('catalog_visibility', $product->catalog_visibility ?? 'visible') === $value)>{{ $label }}</option>
                     @endforeach
                 </x-select>
-                <div class="flex flex-wrap gap-2">
+                <div class="admin-form__actions">
                     <x-button type="submit" variant="primary">{{ $isEdit ? 'Update product' : 'Create product' }}</x-button>
                     <x-button href="{{ route('admin.products.index') }}" variant="ghost">Cancel</x-button>
                 </div>

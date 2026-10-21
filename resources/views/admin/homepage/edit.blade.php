@@ -34,80 +34,52 @@
                     @csrf
                     @method('PUT')
 
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <x-label for="title-{{ $section->id }}">Title</x-label>
-                            <x-input id="title-{{ $section->id }}" name="title" :value="old('title', $section->title)" />
-                        </div>
-                        <div>
-                            <x-label for="subtitle-{{ $section->id }}">Subtitle / eyebrow</x-label>
-                            <x-input id="subtitle-{{ $section->id }}" name="subtitle" :value="old('subtitle', $section->subtitle)" />
-                        </div>
-                    </div>
+                    @php
+                        $configHelp = match ($section->key) {
+                            'story' => 'Journey stages live in beats (label, title, body, icon). CTA should point to About (/pages/about).',
+                            'promo' => 'Optional schedule: starts_at / ends_at (ISO datetime). Banner stays hidden until enabled with real copy or an image.',
+                            'trust' => 'Trust strip items live in items (title, body). Optional marquee string list.',
+                            'hero' => 'slides array of lifestyle banners with scene, tone, focus, and copy fields. Prefer images/homepage/hero-lifestyle-*.webp.',
+                            default => 'Used for featured limits, education limits, and secondary CTAs.',
+                        };
+                    @endphp
 
-                    <div>
-                        <x-label for="body-{{ $section->id }}">Body</x-label>
-                        <x-textarea id="body-{{ $section->id }}" name="body" rows="4">{{ old('body', $section->body) }}</x-textarea>
-                    </div>
+                    <div class="admin-form-grid">
+                        <x-input id="title-{{ $section->id }}" name="title" label="Title" :value="old('title', $section->title)" />
+                        <x-input id="subtitle-{{ $section->id }}" name="subtitle" label="Subtitle / eyebrow" :value="old('subtitle', $section->subtitle)" />
+                        <x-textarea id="body-{{ $section->id }}" name="body" label="Body" rows="4">{{ old('body', $section->body) }}</x-textarea>
+                        <x-input id="cta_label-{{ $section->id }}" name="cta_label" label="CTA label" :value="old('cta_label', $section->cta_label)" />
+                        <x-input id="cta_url-{{ $section->id }}" name="cta_url" label="CTA URL" :value="old('cta_url', $section->cta_url)" placeholder="/shop" />
 
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <x-label for="cta_label-{{ $section->id }}">CTA label</x-label>
-                            <x-input id="cta_label-{{ $section->id }}" name="cta_label" :value="old('cta_label', $section->cta_label)" />
-                        </div>
-                        <div>
-                            <x-label for="cta_url-{{ $section->id }}">CTA URL</x-label>
-                            <x-input id="cta_url-{{ $section->id }}" name="cta_url" :value="old('cta_url', $section->cta_url)" placeholder="/shop" />
-                        </div>
-                    </div>
-
-                    @if (in_array($section->key, ['promo', 'story', 'hero'], true))
-                        <div class="space-y-3 rounded-[var(--radius-control)] border border-line/70 bg-surface p-4">
+                        @if (in_array($section->key, ['promo', 'story', 'hero'], true))
                             <x-media-picker
                                 name="image_path"
                                 label="Section image"
                                 :value="old('image_path', $section->image_path)"
                                 help="Select from the media library or upload a new image. Removing clears the association only."
                             />
-                        </div>
-                    @endif
+                        @endif
 
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <x-label for="sort_order-{{ $section->id }}">Sort order</x-label>
-                            <x-input id="sort_order-{{ $section->id }}" name="sort_order" type="number" min="0" :value="old('sort_order', $section->sort_order)" />
-                        </div>
-                        <div class="flex items-end pb-2">
-                            <label class="flex cursor-pointer items-start gap-3">
-                                <input
-                                    type="checkbox"
-                                    name="is_enabled"
-                                    value="1"
-                                    class="mt-1 size-4 rounded border-line text-brand focus:ring-brand/30"
-                                    @checked((bool) old('is_enabled', $section->is_enabled))
-                                >
-                                <span class="text-sm text-ink">Enabled on homepage</span>
-                            </label>
-                        </div>
+                        <x-input id="sort_order-{{ $section->id }}" name="sort_order" label="Sort order" type="number" min="0" :value="old('sort_order', $section->sort_order)" />
+                        <x-checkbox
+                            name="is_enabled"
+                            value="1"
+                            label="Enabled on homepage"
+                            :checked="(bool) old('is_enabled', $section->is_enabled)"
+                        />
+
+                        <x-textarea
+                            id="config_json-{{ $section->id }}"
+                            name="config_json"
+                            label="Advanced config (JSON)"
+                            rows="5"
+                            :help="$configHelp"
+                        >{{ old('config_json', json_encode($section->config ?? new \stdClass, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) }}</x-textarea>
                     </div>
 
-                    <div>
-                        <x-label for="config_json-{{ $section->id }}">Advanced config (JSON)</x-label>
-                        <x-textarea id="config_json-{{ $section->id }}" name="config_json" rows="5">{{ old('config_json', json_encode($section->config ?? new \stdClass, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) }}</x-textarea>
-                        <p class="ui-help">
-                            @if ($section->key === 'story')
-                                Journey stages live in <code>beats</code> (label, title, body, icon). CTA should point to About (<code>/pages/about</code>).
-                            @elseif ($section->key === 'promo')
-                                Optional schedule: <code>starts_at</code> / <code>ends_at</code> (ISO datetime). Banner stays hidden until enabled with real copy or an image — no placeholder sales.
-                            @elseif ($section->key === 'trust')
-                                Trust strip items live in <code>items</code> (title, body). Optional <code>marquee</code> string list.
-                            @else
-                                Used for hero slides, featured limits, trust items, and secondary CTAs.
-                            @endif
-                        </p>
+                    <div class="admin-form__actions">
+                        <x-button type="submit" variant="primary" size="sm">Save {{ $section->label() }}</x-button>
                     </div>
-
-                    <x-button type="submit" variant="primary" size="sm">Save {{ $section->label() }}</x-button>
                 </form>
             </details>
         @endforeach

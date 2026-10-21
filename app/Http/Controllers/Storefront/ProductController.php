@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Services\ProductViewTracker;
 use App\Services\StorefrontCatalogService;
 use App\Services\WishlistService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -14,11 +16,14 @@ class ProductController extends Controller
     public function __construct(
         private readonly StorefrontCatalogService $catalog,
         private readonly WishlistService $wishlist,
+        private readonly ProductViewTracker $views,
     ) {}
 
-    public function show(string $product): View
+    public function show(Request $request, string $product): View
     {
         $item = $this->catalog->findPublishedProduct($product);
+
+        $this->views->record($item, $request);
 
         $policyPages = Page::query()
             ->published()

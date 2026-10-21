@@ -34,9 +34,16 @@ final class Money
         return self::toCents($amount);
     }
 
-    public static function format(int $cents, string $currency = 'USD'): string
+    public static function format(int $cents, ?string $currency = null): string
     {
-        return ($currency === 'USD' ? '$' : $currency.' ').number_format($cents / 100, 2);
+        $currency = strtoupper($currency ?? (string) config('store.currency', 'USD'));
+        $amount = number_format($cents / 100, 2);
+
+        return match ($currency) {
+            'USD' => '$'.$amount,
+            'PKR' => 'Rs '.$amount,
+            default => $currency.' '.$amount,
+        };
     }
 
     public static function toDecimalString(int $cents): string

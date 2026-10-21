@@ -11,60 +11,73 @@
 @endsection
 
 @section('content')
-    <form method="GET" class="mb-4 flex flex-wrap gap-2">
-        <x-input name="q" type="search" placeholder="Search SKU or name…" :value="request('q')" class="max-w-sm" />
-        <x-select name="filter" class="w-44">
-            <option value="">All stock</option>
-            <option value="low" @selected(request('filter') === 'low')>Low stock</option>
-            <option value="out" @selected(request('filter') === 'out')>Out of stock</option>
-        </x-select>
-        <x-button type="submit" variant="outline">Filter</x-button>
-    </form>
+    <div class="admin-table-panel">
+        <form method="GET" class="admin-toolbar">
+            <div class="admin-toolbar__search">
+                <x-input name="q" type="search" placeholder="Search SKU or name…" :value="request('q')" aria-label="Search inventory" />
+            </div>
+            <div class="admin-toolbar__control">
+                <x-select name="filter" aria-label="Stock filter">
+                    <option value="">All stock</option>
+                    <option value="low" @selected(request('filter') === 'low')>Low stock</option>
+                    <option value="out" @selected(request('filter') === 'out')>Out of stock</option>
+                </x-select>
+            </div>
+            <div class="admin-toolbar__actions">
+                @if (request()->filled('q') || request()->filled('filter'))
+                    <x-button href="{{ route('admin.inventory.index') }}" variant="ghost" size="sm">Clear</x-button>
+                @endif
+                <x-button type="submit" variant="primary" size="sm">Apply filters</x-button>
+            </div>
+        </form>
 
-    <div class="overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface-elevated shadow-soft">
-        <table class="min-w-full divide-y divide-line text-left text-sm">
-            <thead class="bg-surface-muted/70 text-xs tracking-wide text-ink-muted uppercase">
-                <tr>
-                    <th class="px-4 py-3 font-semibold">Product</th>
-                    <th class="px-4 py-3 font-semibold">SKU</th>
-                    <th class="px-4 py-3 font-semibold">Status</th>
-                    <th class="px-4 py-3 font-semibold">Qty</th>
-                    <th class="px-4 py-3 font-semibold">Threshold</th>
-                    <th class="px-4 py-3 font-semibold"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-line">
-                @forelse ($products as $product)
+        <div class="admin-table-wrap">
+            <table class="admin-data-table">
+                <thead>
                     <tr>
-                        <td class="px-4 py-3 font-medium text-ink">{{ $product->name }}</td>
-                        <td class="px-4 py-3 font-mono text-xs">{{ $product->sku }}</td>
-                        <td class="px-4 py-3">
-                            <x-badge :variant="$product->stock_status->badgeVariant()">
-                                {{ $product->stock_status->label() }}
-                            </x-badge>
-                        </td>
-                        <td class="px-4 py-3" colspan="3">
-                            <form method="POST" action="{{ route('admin.inventory.update', $product) }}" class="flex flex-wrap items-end gap-2">
-                                @csrf
-                                @method('PUT')
-                                <div class="w-24">
-                                    <x-input name="stock_quantity" type="number" min="0" :value="$product->stock_quantity" aria-label="Quantity for {{ $product->sku }}" />
-                                </div>
-                                <div class="w-24">
-                                    <x-input name="low_stock_threshold" type="number" min="0" :value="$product->low_stock_threshold" aria-label="Threshold for {{ $product->sku }}" />
-                                </div>
-                                <x-button type="submit" variant="primary" size="sm">Update</x-button>
-                            </form>
-                        </td>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Status</th>
+                        <th>Qty</th>
+                        <th>Threshold</th>
+                        <th><span class="sr-only">Actions</span></th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-10 text-center text-ink-muted">No products to manage. Create products first.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($products as $product)
+                        <tr>
+                            <td class="font-medium text-ink">{{ $product->name }}</td>
+                            <td class="font-mono text-xs">{{ $product->sku }}</td>
+                            <td>
+                                <x-badge :variant="$product->stock_status->badgeVariant()">
+                                    {{ $product->stock_status->label() }}
+                                </x-badge>
+                            </td>
+                            <td colspan="3">
+                                <form method="POST" action="{{ route('admin.inventory.update', $product) }}" class="admin-inline-controls">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="admin-inline-controls__qty">
+                                        <x-input name="stock_quantity" type="number" min="0" :value="$product->stock_quantity" aria-label="Quantity for {{ $product->sku }}" />
+                                    </div>
+                                    <div class="admin-inline-controls__qty">
+                                        <x-input name="low_stock_threshold" type="number" min="0" :value="$product->low_stock_threshold" aria-label="Threshold for {{ $product->sku }}" />
+                                    </div>
+                                    <x-button type="submit" variant="primary" size="sm">Update</x-button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="admin-data-table__empty">No products to manage. Create products first.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($products->hasPages())
+            <div class="admin-table-panel__pager">{{ $products->links() }}</div>
+        @endif
     </div>
-
-    <div class="mt-4">{{ $products->links() }}</div>
 @endsection

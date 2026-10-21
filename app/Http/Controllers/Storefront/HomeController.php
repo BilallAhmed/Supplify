@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Services\BlogService;
 use App\Services\ContentService;
 use App\Services\StorefrontCatalogService;
@@ -40,15 +41,72 @@ class HomeController extends Controller
             ? $this->blog->latestPublished(max(1, min(3, $educationLimit)))
             : collect();
 
+        $heroSlides = $this->content->heroSlides($hero);
+
         return view('storefront.home', [
             'sections' => $sections,
-            'heroSlides' => $this->content->heroSlides($hero),
+            'heroSlides' => $heroSlides,
             'featuredProducts' => $featuredProducts,
             'exploreProducts' => $exploreProducts,
             'goalCategories' => $sections->has('shop_by_goal')
                 ? $this->catalog->activeCategories()->take(max(1, $goalLimit))
                 : collect(),
             'educationPosts' => $educationPosts,
+            'depthProduct' => $this->depthShowcaseProduct(
+                $heroSlides,
+                $featuredProducts->pluck('id')->all()
+            ),
         ]);
+    }
+
+    /**
+     * Prefer a catalog product that is not featured in the lifestyle hero.
+     */
+    private function depthShowcaseProduct($heroSlides, array $featuredIds): ?Product
+    {
+        $heroSlugs = collect($heroSlides)
+            ->map(function ($slide) {
+                $url = (string) ($slide['cta_url'] ?? '');
+                if ($url === '') {
+                    return null;
+                }
+                $path = parse_url($url, PHP_URL_PATH) ?: $url;
+
+                return basename(trim($path, '/')) ?: null;
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        $preferredSlugs = [
+            'astaxanthin-12mg-120-softgels',
+            'berberine-500mg-120-vegcaps',
+            'nadh-20mg-90-tablets',
+            'l-carnitine-500mg-60-tablets',
+        ];
+
+        $query = Product::query()
+            ->where('is_active', true)
+            ->where('catalog_visibility', '!=', 'hidden')
+            ->whereHas('images')
+            ->with(['images', 'categories', 'tags']);
+
+        $preferred = (clone $query)
+            ->whereIn('slug', $preferredSlugs)
+            ->when($heroSlugs !== [], fn ($q) => $q->whereNotIn('slug', $heroSlugs))
+            ->get()
+            ->sortBy(fn (Product $p) => array_search($p->slug, $preferredSlugs, true))
+            ->first();
+
+        if ($preferred) {
+            return $preferred;
+        }
+
+        return $query
+            ->when($featuredIds !== [], fn ($q) => $q->whereNotIn('id', $featuredIds))
+            ->when($heroSlugs !== [], fn ($q) => $q->whereNotIn('slug', $heroSlugs))
+            ->orderByDesc('is_featured')
+            ->orderBy('name')
+            ->first();
     }
 }

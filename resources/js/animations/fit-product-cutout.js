@@ -109,7 +109,9 @@ export function fitProductCutout(img, frame, options = {}) {
     img.style.inset = 'auto';
     img.style.left = '50%';
     img.style.top = '50%';
-    img.style.transform = 'translate(-50%, -50%)';
+    // Layout centering must never tween through a diagonal transform.
+    img.style.translate = '-50% -50%';
+    img.style.transform = 'none';
     img.style.objectFit = 'fill';
 }
 
@@ -122,7 +124,6 @@ export function fitProductCutout(img, frame, options = {}) {
 export function fitProductCutoutsIn(root, frameSelector, imgSelector, options = {}) {
     const frames = [...root.querySelectorAll(frameSelector)];
     const cleanups = [];
-    let idleId = 0;
     let resizeRaf = 0;
 
     const applyFrame = (frame) => {
@@ -133,20 +134,10 @@ export function fitProductCutoutsIn(root, frameSelector, imgSelector, options = 
         });
     };
 
-    const schedule = (fn) => {
-        if (typeof requestIdleCallback === 'function') {
-            const id = requestIdleCallback(() => fn(), { timeout: 600 });
-            cleanups.push(() => cancelIdleCallback(id));
-            return;
-        }
-        const t = window.setTimeout(fn, 32);
-        cleanups.push(() => clearTimeout(t));
-    };
-
     frames.forEach((frame) => {
         const images = [...frame.querySelectorAll(imgSelector)];
         images.forEach((img) => {
-            const run = () => schedule(() => fitProductCutout(img, frame, options));
+            const run = () => fitProductCutout(img, frame, options);
             if (img.complete && img.naturalWidth) {
                 run();
             } else {
@@ -169,7 +160,6 @@ export function fitProductCutoutsIn(root, frameSelector, imgSelector, options = 
     cleanups.push(() => {
         window.removeEventListener('resize', onResize);
         if (resizeRaf) cancelAnimationFrame(resizeRaf);
-        if (idleId) cancelIdleCallback?.(idleId);
     });
 
     return () => cleanups.forEach((fn) => fn());

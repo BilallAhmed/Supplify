@@ -18,9 +18,16 @@ class BlogController extends Controller
     public function index(Request $request): View
     {
         $filters = $request->only(['q', 'category', 'tag']);
+        $hasFilters = $this->blog->listingHasActiveFilters($filters);
+        $featuredCandidate = $hasFilters ? null : $this->blog->featuredForListing($filters);
+        $featured = ($featuredCandidate && $request->integer('page', 1) <= 1)
+            ? $featuredCandidate
+            : null;
 
         return view('storefront.blog.index', [
-            'posts' => $this->blog->paginatePublished($filters),
+            'posts' => $this->blog->paginatePublished($filters, $featuredCandidate?->id),
+            'featured' => $featured,
+            'totalMatching' => $this->blog->publishedMatchingCount($filters),
             'categories' => $this->blog->activeCategories(),
             'filters' => $filters,
         ]);

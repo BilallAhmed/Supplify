@@ -5,8 +5,8 @@
     $firstSlide = ($heroSlides ?? collect())->first();
 @endphp
 
-@section('title', ($firstSlide['title'] ?? $hero?->title ?: config('app.name')).' — Premium US Supplements')
-@section('meta_description', $firstSlide['body'] ?? $hero?->body ?: 'Premium, science-led dietary supplements. Clean formulas and transparent labels for everyday wellness.')
+@section('title', ($firstSlide['title'] ?? $hero?->title ?: config('app.name')).' — Science-led supplements')
+@section('meta_description', $firstSlide['body'] ?? $hero?->body ?: 'Science-led dietary supplements with clear labels and transparent formulas for everyday wellness.')
 
 @push('head')
     @vite(['resources/js/home.js'])
@@ -23,6 +23,11 @@
                 'goalCategories' => $goalCategories ?? collect(),
                 'educationPosts' => $educationPosts ?? null,
             ])
+
+            @if ($key === 'featured_products')
+                @include('storefront.home.sections.routine_campaign')
+            @endif
         @endforeach
     </div>
 @endsection
+

@@ -1,17 +1,17 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { prefersReducedMotion } from './smooth-scroll';
+import { prefersReducedMotion } from './motion-prefs';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const BALANCE_MQ = '(min-width: 1024px)';
 
 /**
- * Match the left column height to the full timeline (including pre-animation cards)
- * so the image frame absorbs leftover space and the CTA aligns with the last card.
+ * Match the left column height to the full timeline so the image frame
+ * absorbs leftover space and the CTA aligns with the last card.
  */
 function initColumnBalance(section, intro, timeline) {
-    if (! intro || ! timeline) {
+    if (!intro || !timeline) {
         return () => {};
     }
 
@@ -25,23 +25,19 @@ function initColumnBalance(section, intro, timeline) {
     };
 
     const measure = () => {
-        if (! mq.matches) {
+        if (!mq.matches) {
             clear();
             return;
         }
 
-        // Use stage offsets (not the stretched list box) so opacity/transform
-        // animations never change the balance height.
         const stages = [...timeline.querySelectorAll('[data-approach-stage]')];
         const last = stages.at(-1);
-
-        if (! last) {
+        if (!last) {
             clear();
             return;
         }
 
         const height = Math.round(last.offsetTop + last.offsetHeight);
-
         if (height < 1) {
             clear();
             return;
@@ -51,7 +47,6 @@ function initColumnBalance(section, intro, timeline) {
         if (section.style.getPropertyValue('--approach-balance-h') !== next) {
             section.style.setProperty('--approach-balance-h', next);
             section.classList.add('is-balanced');
-            // Defer refresh so we don't hitch mid-scroll on layout measure.
             requestAnimationFrame(() => ScrollTrigger.refresh());
         } else {
             section.classList.add('is-balanced');
@@ -77,7 +72,7 @@ function initColumnBalance(section, intro, timeline) {
     }
 
     const img = intro.querySelector('.home-approach__visual-img');
-    if (img && ! img.complete) {
+    if (img && !img.complete) {
         img.addEventListener('load', schedule, { once: true });
     }
 
@@ -97,24 +92,25 @@ function initColumnBalance(section, intro, timeline) {
 }
 
 /**
- * Scroll-linked journey timeline for the Our Approach section.
- * Content remains fully visible without JS; reduced-motion shows the complete static journey.
+ * Scroll-linked journey for Our Approach.
+ * Path + active step share one scrubbed progress so jumps and pin refreshes stay in sync.
  */
 export function initApproach(root = document) {
     const section = root.querySelector('[data-home-approach]');
-    if (! section) return () => {};
+    if (!section) return () => {};
 
     const intro = section.querySelector('[data-approach-intro]');
     const timeline = section.querySelector('[data-approach-timeline]');
     const stages = [...section.querySelectorAll('[data-approach-stage]')];
     const path = section.querySelector('[data-approach-path]');
+    const image = section.querySelector('.home-approach__visual-img');
     const reduced = prefersReducedMotion();
 
     section.classList.add('is-ready');
 
     const destroyBalance = initColumnBalance(section, intro, timeline);
 
-    if (reduced || stages.length === 0) {
+    if (reduced || stages.length === 0 || !timeline) {
         section.classList.add('is-static');
         return () => {
             destroyBalance();
@@ -123,54 +119,89 @@ export function initApproach(root = document) {
     }
 
     const ctx = gsap.context(() => {
-        // Opacity/visibility only — keep layout height stable for column balance.
-        gsap.set(intro, { autoAlpha: 0, y: 28 });
-        gsap.set(stages, { autoAlpha: 0, y: 32 });
+        let active = -1;
+        const activate = (index) => {
+            const next = Math.max(0, Math.min(stages.length - 1, index));
+            if (active === next) return;
+            active = next;
+            stages.forEach((stage, i) => {
+                stage.classList.toggle('is-active', i === next);
+                stage.classList.toggle('is-seen', i < next);
+            });
+        };
+        activate(0);
 
-        if (path && typeof path.getTotalLength === 'function') {
-            const pathLength = path.getTotalLength() || 100;
-            gsap.set(path, { strokeDasharray: pathLength, strokeDashoffset: pathLength });
+        const length = path && typeof path.getTotalLength === 'function'
+            ? (path.getTotalLength() || 100)
+            : 100;
+
+        if (path) {
+            gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
         }
 
-        const stageAt = (i) => 0.18 + i * 0.16;
+        const applyProgress = (progress) => {
+            if (path) {
+                gsap.set(path, { strokeDashoffset: length * (1 - progress) });
+            }
+            if (progress <= 0.02) {
+                activate(0);
+                return;
+            }
+            if (progress >= 0.98) {
+                activate(stages.length - 1);
+                return;
+            }
+            activate(Math.floor(progress * stages.length));
+        };
 
-        const tl = gsap.timeline({
-            defaults: { ease: 'power2.out' },
-            scrollTrigger: {
-                trigger: section,
-                start: 'top 72%',
-                end: 'bottom 55%',
-                scrub: 0.45,
-                invalidateOnRefresh: true,
-                onUpdate(self) {
-                    const p = self.progress;
-                    stages.forEach((stage, i) => {
-                        const active = p >= stageAt(i) - 0.02;
-                        if (stage.classList.contains('is-active') !== active) {
-                            stage.classList.toggle('is-active', active);
-                        }
-                    });
-                },
-                onLeaveBack() {
-                    stages.forEach((stage) => stage.classList.remove('is-active'));
-                },
+        ScrollTrigger.create({
+            // Scrub across the section itself so #approach landings start at step 01,
+            // then path + nodes advance as the taller timeline scrolls through.
+            trigger: section,
+            start: 'top 20%',
+            end: 'bottom 55%',
+            scrub: 0.4,
+            invalidateOnRefresh: true,
+            onUpdate(self) {
+                applyProgress(self.progress);
+            },
+            onRefresh(self) {
+                applyProgress(self.progress);
+            },
+            onLeaveBack() {
+                applyProgress(0);
             },
         });
 
-        // Intro includes the About CTA — reveal together so the action stays available.
-        tl.to(intro, { autoAlpha: 1, y: 0, duration: 0.35 }, 0);
-
-        if (path) {
-            tl.to(path, { strokeDashoffset: 0, duration: 0.85, ease: 'none' }, 0.12);
+        if (image) {
+            gsap.fromTo(
+                image,
+                { scale: 1.04 },
+                {
+                    scale: 1,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: section,
+                        start: 'top 70%',
+                        end: 'bottom 35%',
+                        scrub: 0.45,
+                        invalidateOnRefresh: true,
+                    },
+                },
+            );
         }
 
-        tl.to(stages, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.16 }, 0.18);
+        // Featured pin spacing shifts document height after first paint — refresh until stable.
+        const refresh = () => ScrollTrigger.refresh();
+        requestAnimationFrame(() => requestAnimationFrame(refresh));
+        [300, 800, 1600].forEach((ms) => window.setTimeout(refresh, ms));
+        window.addEventListener('load', refresh, { once: true });
     }, section);
 
     return () => {
         destroyBalance();
         ctx.revert();
         section.classList.remove('is-ready', 'is-static');
-        stages.forEach((stage) => stage.classList.remove('is-active'));
+        stages.forEach((stage) => stage.classList.remove('is-active', 'is-seen'));
     };
 }

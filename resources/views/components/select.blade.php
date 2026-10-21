@@ -3,23 +3,26 @@
     'name' => null,
     'help' => null,
     'error' => null,
+    'required' => false,
 ])
 
 @php
     $id = $attributes->get('id') ?? ($name ? str_replace(['[', ']'], ['-', ''], $name) : 'select-'.uniqid());
     $hasError = filled($error) || ($name && $errors->has($name));
     $errorMessage = $error ?? ($name ? $errors->first($name) : null);
+    $isRequired = $required || $attributes->has('required');
 @endphp
 
-<div class="w-full">
+<div {{ $attributes->only('class')->merge(['class' => 'ui-field']) }}>
     @if ($label)
-        <x-label :for="$id" :value="$label" />
+        <x-label :for="$id" :value="$label" :required="$isRequired" />
     @endif
 
     <select
         id="{{ $id }}"
         @if ($name) name="{{ $name }}" @endif
-        {{ $attributes->merge([
+        @if ($isRequired) required @endif
+        {{ $attributes->except(['class', 'required'])->merge([
             'class' => 'ui-input'.($hasError ? ' ui-input-error' : ''),
         ]) }}
     >

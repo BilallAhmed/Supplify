@@ -4,6 +4,7 @@ import './product-category-picker';
 import './product-editor';
 import './product-pdp';
 import './product-commerce';
+import './shop-catalog';
 import './media-picker';
 import { fitProductCutoutsIn } from './animations/fit-product-cutout';
 

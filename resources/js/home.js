@@ -1,30 +1,34 @@
-import 'lenis/dist/lenis.css';
-import { initSmoothScroll } from './animations/smooth-scroll';
+import '../css/home-balance.css';
+import { prefersReducedMotion } from './animations/motion-prefs';
 import { initHero } from './animations/hero';
 import { initApproach } from './animations/approach';
 import { initFeatured } from './animations/featured-formulas';
-import { initInteractions } from './animations/interactions';
+import { initHomePolish } from './animations/home-polish';
+import { initProductHover } from './animations/product-hover';
+import { initRoutineCampaign } from './animations/routine-campaign';
 
 document.documentElement.classList.add('js-enabled');
 
+let teardown = null;
 function boot() {
-    const { lenis, destroy: destroyScroll } = initSmoothScroll();
-    const destroyHero = initHero();
-    const destroyApproach = initApproach();
-    const destroyFeatured = initFeatured(document, { lenis });
-    const destroyInteractions = initInteractions();
+    if (teardown) return;
+    if (prefersReducedMotion()) {
+        document.documentElement.classList.add('motion-reduced');
+    }
 
-    window.addEventListener(
-        'pagehide',
-        () => {
-            destroyHero?.();
-            destroyApproach?.();
-            destroyFeatured?.();
-            destroyInteractions?.();
-            destroyScroll?.();
-        },
-        { once: true }
-    );
+    const destroyHero = initHero();
+    // Featured pins first so later scroll sections measure against the final document height.
+    const destroyFeatured = initFeatured();
+    const destroyCampaign = initRoutineCampaign();
+    const destroyApproach = initApproach();
+    const destroyPolish = initHomePolish();
+    const destroyProductHover = initProductHover();
+
+    teardown = () => {
+        destroyProductHover?.(); destroyCampaign?.(); destroyHero?.(); destroyApproach?.(); destroyFeatured?.(); destroyPolish?.();
+        teardown = null;
+    };
+
 }
 
 if (document.readyState === 'loading') {
@@ -32,3 +36,6 @@ if (document.readyState === 'loading') {
 } else {
     boot();
 }
+
+window.addEventListener('pagehide', () => teardown?.());
+window.addEventListener('pageshow', event => { if (event.persisted) boot(); });

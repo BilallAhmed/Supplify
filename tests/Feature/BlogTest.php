@@ -114,4 +114,78 @@ class BlogTest extends TestCase
             ->get(route('admin.blog.index'))
             ->assertForbidden();
     }
+
+    public function test_journal_shows_featured_once_and_excludes_it_from_grid(): void
+    {
+        $featured = Post::factory()->create([
+            'title' => 'Featured Wellness Story',
+            'slug' => 'featured-wellness-story',
+            'excerpt' => 'Lead story excerpt.',
+            'body' => str_repeat('Wellness reading content here. ', 80),
+            'is_published' => true,
+            'is_featured' => true,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $other = Post::factory()->create([
+            'title' => 'Secondary Insight',
+            'slug' => 'secondary-insight',
+            'excerpt' => 'Another article.',
+            'is_published' => true,
+            'is_featured' => false,
+            'published_at' => now()->subHours(2),
+        ]);
+
+        $html = $this->get(route('blog.index'))
+            ->assertOk()
+            ->assertSee('Featured Wellness Story', false)
+            ->assertSee('Secondary Insight', false)
+            ->assertSee('blog-featured', false)
+            ->assertSee('min read', false)
+            ->getContent();
+
+        $this->assertSame(1, substr_count($html, 'id="blog-featured-heading"'));
+        $this->assertDoesNotMatchRegularExpression(
+            '/blog-card__title[^>]*>\s*Featured Wellness Story\s*</',
+            $html,
+            'Featured article must not also appear in the regular grid on page one.'
+        );
+        $this->assertStringContainsString('Read Article', $html);
+
+        $this->get(route('blog.index', ['q' => 'Secondary']))
+            ->assertOk()
+            ->assertSee('Secondary Insight', false)
+            ->assertDontSee('blog-featured', false)
+            ->assertDontSee('Featured Wellness Story', false);
+
+        $this->assertTrue($featured->fresh()->is_featured);
+        $this->assertFalse($other->fresh()->is_featured);
+    }
+
+    public function test_admin_featured_flag_is_exclusive(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $first = Post::factory()->create([
+            'title' => 'First Feature',
+            'slug' => 'first-feature',
+            'is_published' => true,
+            'is_featured' => true,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.blog.store'), [
+                'title' => 'Second Feature',
+                'slug' => 'second-feature',
+                'excerpt' => 'New lead.',
+                'body' => 'Body copy.',
+                'is_published' => '1',
+                'is_featured' => '1',
+            ])
+            ->assertRedirect();
+
+        $this->assertFalse($first->fresh()->is_featured);
+        $this->assertTrue(Post::query()->where('slug', 'second-feature')->value('is_featured'));
+    }
 }

@@ -2,7 +2,35 @@
 
 @php
     $pageTitle = 'Blogs — '.config('app.name');
-    $pageDescription = 'Insights on routines, ingredients, and how to evaluate supplements with a clearer eye.';
+    $pageDescription = 'Explore practical insights on nutrition, ingredients, and supplements to help you make more informed choices.';
+    $searchQuery = trim((string) ($filters['q'] ?? ''));
+    $activeCategorySlug = $filters['category'] ?? null;
+    $hasActiveFilters = $searchQuery !== '' || filled($activeCategorySlug) || filled($filters['tag'] ?? null);
+    $totalMatching = $totalMatching ?? $posts->total();
+    $resultsLabel = $totalMatching === 0
+        ? '0 articles'
+        : $totalMatching.' '.\Illuminate\Support\Str::plural('article', $totalMatching);
+
+    $blogParams = function (array $overrides = []) use ($searchQuery, $activeCategorySlug, $filters) {
+        $params = [
+            'q' => $searchQuery !== '' ? $searchQuery : null,
+            'category' => $activeCategorySlug ?: null,
+            'tag' => filled($filters['tag'] ?? null) ? $filters['tag'] : null,
+        ];
+
+        foreach ($overrides as $key => $value) {
+            if ($value === null) {
+                unset($params[$key]);
+            } else {
+                $params[$key] = $value;
+            }
+        }
+
+        return array_filter($params, static fn ($value) => $value !== null && $value !== '');
+    };
+
+    $clearUrl = route('blog.index');
+    $visibleCategories = $categories->filter(fn ($category) => ($category->published_posts_count ?? 0) > 0);
 @endphp
 
 @section('title', $pageTitle)
@@ -11,109 +39,157 @@
 @section('og_type', 'website')
 
 @section('content')
-    <section class="border-b border-line/60 bg-gradient-to-b from-brand-mist/50 to-surface-muted" aria-labelledby="blog-heading">
-        <x-container class="py-8 sm:py-10">
-            <nav class="mb-3 text-sm text-ink-muted" aria-label="Breadcrumb">
-                <ol class="flex flex-wrap items-center gap-2">
-                    <li><a href="{{ route('home') }}" class="hover:text-brand">Home</a></li>
-                    <li aria-hidden="true">/</li>
-                    <li class="font-medium text-ink" aria-current="page">Blogs</li>
-                </ol>
-            </nav>
+    <x-page-image-banner
+        image="images/blog/blog-hero.webp"
+        image-alt="A sunlit wellness reading desk with a journal and natural ingredients"
+        eyebrow="Supplify Journal"
+        title="Learn More About Everyday Wellness"
+        description="Explore practical insights on nutrition, ingredients, and supplements to help you make more informed choices."
+        variant="journal"
+        heading-id="blog-heading"
+        current-label="Blogs"
+    />
 
-            <h1 id="blog-heading" class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-                Blogs
-            </h1>
-            <p class="mt-2 max-w-2xl text-sm text-ink-muted sm:text-base">
-                {{ $pageDescription }}
-            </p>
-        </x-container>
-    </section>
+    <x-container class="blog-journal py-10 lg:py-12">
+        <div class="blog-toolbar">
+            <form method="GET" action="{{ route('blog.index') }}" class="blog-toolbar__search" role="search">
+                @if ($activeCategorySlug)
+                    <input type="hidden" name="category" value="{{ $activeCategorySlug }}">
+                @endif
+                @if (! empty($filters['tag']))
+                    <input type="hidden" name="tag" value="{{ $filters['tag'] }}">
+                @endif
 
-    <x-container class="py-10 lg:py-12">
-        <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <form method="GET" action="{{ route('blog.index') }}" class="flex flex-wrap gap-2">
-                @if (! empty($filters['category']))
-                    <input type="hidden" name="category" value="{{ $filters['category'] }}">
-                @endif
-                <x-input name="q" type="search" placeholder="Search insights…" :value="$filters['q'] ?? ''" class="min-w-[14rem]" />
-                <x-button type="submit" variant="outline" size="sm">Search</x-button>
-                @if (! empty($filters['q']) || ! empty($filters['category']))
-                    <x-button href="{{ route('blog.index') }}" variant="ghost" size="sm">Clear</x-button>
-                @endif
+                <label for="blog-q" class="sr-only">Search articles</label>
+                <span class="blog-toolbar__search-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
+                    </svg>
+                </span>
+                <input
+                    id="blog-q"
+                    class="blog-control blog-control--search"
+                    name="q"
+                    type="search"
+                    value="{{ $searchQuery }}"
+                    placeholder="Search articles"
+                    autocomplete="off"
+                >
+                <button type="submit" class="blog-control blog-control--btn">Search</button>
             </form>
 
-            @if ($categories->isNotEmpty())
-                <div class="flex flex-wrap gap-2" role="navigation" aria-label="Blog categories">
+            <div class="blog-toolbar__meta">
+                <p class="blog-toolbar__count" aria-live="polite">{{ $resultsLabel }}</p>
+                @if ($hasActiveFilters)
+                    <a href="{{ $clearUrl }}" class="blog-toolbar__clear">Clear filters</a>
+                @endif
+            </div>
+        </div>
+
+        @if ($visibleCategories->isNotEmpty())
+            <nav class="blog-cats" aria-label="Blog categories">
+                <div class="blog-cats__scroller">
                     <a
-                        href="{{ route('blog.index', array_filter(['q' => $filters['q'] ?? null])) }}"
-                        class="rounded-[var(--radius-control)] border px-3 py-1.5 text-xs font-semibold tracking-wide uppercase {{ empty($filters['category']) ? 'border-brand bg-brand text-white' : 'border-line text-ink-muted hover:border-brand hover:text-brand' }}"
+                        href="{{ route('blog.index', $blogParams(['category' => null])) }}"
+                        class="blog-cats__chip {{ $activeCategorySlug ? '' : 'is-active' }}"
+                        @if (! $activeCategorySlug) aria-current="page" @endif
                     >
                         All
                     </a>
-                    @foreach ($categories as $category)
-                        @if (($category->published_posts_count ?? 0) > 0)
-                            <a
-                                href="{{ route('blog.index', array_filter(['category' => $category->slug, 'q' => $filters['q'] ?? null])) }}"
-                                class="rounded-[var(--radius-control)] border px-3 py-1.5 text-xs font-semibold tracking-wide uppercase {{ ($filters['category'] ?? null) === $category->slug ? 'border-brand bg-brand text-white' : 'border-line text-ink-muted hover:border-brand hover:text-brand' }}"
-                            >
-                                {{ $category->name }}
-                            </a>
-                        @endif
+                    @foreach ($visibleCategories as $category)
+                        <a
+                            href="{{ route('blog.index', $blogParams(['category' => $category->slug])) }}"
+                            class="blog-cats__chip {{ $activeCategorySlug === $category->slug ? 'is-active' : '' }}"
+                            @if ($activeCategorySlug === $category->slug) aria-current="page" @endif
+                        >
+                            {{ $category->name }}
+                        </a>
                     @endforeach
                 </div>
-            @endif
-        </div>
+            </nav>
+        @endif
 
-        @if ($posts->isEmpty())
-            <div class="mx-auto max-w-xl rounded-[var(--radius-panel)] border border-dashed border-line bg-surface-elevated px-6 py-14 text-center">
-                <p class="font-display text-xl font-bold text-ink">No articles yet</p>
-                <p class="mt-2 text-sm text-ink-muted">Check back soon, or browse the catalog meanwhile.</p>
-                <div class="mt-6">
-                    <x-button href="{{ route('shop.index') }}" variant="outline">Browse products</x-button>
+        @if ($featured)
+            @php
+                $featuredHref = route('blog.show', $featured->slug);
+                $featuredExcerpt = $featured->excerpt
+                    ?: \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/u', ' ', strip_tags((string) $featured->body)) ?? ''), 180);
+                $featuredMinutes = $featured->readingTimeMinutes();
+            @endphp
+            <section class="blog-featured" aria-labelledby="blog-featured-heading">
+                <a href="{{ $featuredHref }}" class="blog-featured__link" aria-label="Read article: {{ $featured->title }}">
+                    <div class="blog-featured__media">
+                        <img
+                            src="{{ $featured->featuredImageUrl() }}"
+                            alt="{{ $featured->featuredImageAlt() }}"
+                            class="blog-featured__img"
+                            width="960"
+                            height="600"
+                            fetchpriority="high"
+                            decoding="async"
+                        >
+                    </div>
+                    <div class="blog-featured__copy">
+                        <div class="blog-featured__meta">
+                            @if ($featured->category)
+                                <span class="blog-featured__category">{{ $featured->category->name }}</span>
+                            @endif
+                            @if ($featured->published_at)
+                                <time datetime="{{ $featured->published_at->toDateString() }}">
+                                    {{ $featured->published_at->format('M j, Y') }}
+                                </time>
+                            @endif
+                            @if ($featuredMinutes)
+                                <span>{{ $featuredMinutes }} min read</span>
+                            @endif
+                        </div>
+                        <h2 id="blog-featured-heading" class="blog-featured__title font-display">{{ $featured->title }}</h2>
+                        @if (filled($featuredExcerpt))
+                            <p class="blog-featured__excerpt">{{ $featuredExcerpt }}</p>
+                        @endif
+                        <span class="blog-featured__cta">
+                            Read Article
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </div>
+                </a>
+            </section>
+        @endif
+
+        @if ($posts->isEmpty() && ! $featured)
+            <div class="blog-empty" role="status">
+                <p class="blog-empty__title font-display">
+                    {{ $hasActiveFilters ? 'No articles match these filters' : 'No articles yet' }}
+                </p>
+                <p class="blog-empty__copy">
+                    @if ($hasActiveFilters)
+                        Try clearing your search or choosing another category.
+                    @else
+                        Check back soon, or browse the catalog meanwhile.
+                    @endif
+                </p>
+                <div class="blog-empty__actions">
+                    @if ($hasActiveFilters)
+                        <a href="{{ $clearUrl }}" class="blog-control blog-control--btn blog-control--primary">View all articles</a>
+                    @else
+                        <a href="{{ route('shop.index') }}" class="blog-control blog-control--btn">Browse products</a>
+                    @endif
                 </div>
             </div>
-        @else
-            <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                @foreach ($posts as $post)
-                    <article class="group flex flex-col overflow-hidden rounded-[var(--radius-panel)] border border-line/70 bg-surface-elevated shadow-soft transition hover:border-brand/35">
-                        <a href="{{ route('blog.show', $post->slug) }}" class="block overflow-hidden bg-surface-muted">
-                            <img
-                                src="{{ $post->featuredImageUrl() }}"
-                                alt=""
-                                class="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                                loading="lazy"
-                                width="640"
-                                height="400"
-                            >
-                        </a>
-                        <div class="flex flex-1 flex-col gap-3 p-5">
-                            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold tracking-[0.12em] text-brand uppercase">
-                                @if ($post->category)
-                                    <span>{{ $post->category->name }}</span>
-                                    <span class="text-ink-subtle" aria-hidden="true">·</span>
-                                @endif
-                                <time datetime="{{ $post->published_at?->toDateString() }}">
-                                    {{ $post->published_at?->format('M j, Y') }}
-                                </time>
-                            </div>
-                            <h2 class="font-display text-xl font-bold tracking-tight text-ink">
-                                <a href="{{ route('blog.show', $post->slug) }}" class="hover:text-brand">{{ $post->title }}</a>
-                            </h2>
-                            @if ($post->excerpt)
-                                <p class="text-sm leading-relaxed text-ink-muted">{{ $post->excerpt }}</p>
-                            @endif
-                            <div class="mt-auto pt-2">
-                                <a href="{{ route('blog.show', $post->slug) }}" class="text-sm font-semibold text-brand hover:underline">
-                                    Read article
-                                </a>
-                            </div>
-                        </div>
-                    </article>
+        @elseif ($posts->isNotEmpty())
+            <div class="blog-grid">
+                @foreach ($posts as $index => $post)
+                    <x-blog-article-card :post="$post" :priority="$index < 3 && ! $featured" />
                 @endforeach
             </div>
 
-            <div class="mt-10">{{ $posts->links() }}</div>
+            @if ($posts->hasPages())
+                <div class="blog-pagination">
+                    {{ $posts->links('pagination.shop') }}
+                </div>
+            @endif
         @endif
     </x-container>
 @endsection

@@ -93,6 +93,16 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function views(): HasMany
+    {
+        return $this->hasMany(ProductView::class);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ProductActivity::class);
+    }
+
     public function attributes(): HasMany
     {
         return $this->hasMany(ProductAttribute::class)->orderBy('sort_order');
@@ -198,22 +208,24 @@ class Product extends Model
 
     public function effectivePriceFormatted(): string
     {
+        $currency = app(\App\Services\StoreSettings::class)->currency();
+
         if ($this->isVariable()) {
             $prices = $this->enabledVariationPrices();
 
             if ($prices === []) {
-                return Money::format(0);
+                return Money::format(0, $currency);
             }
 
             $min = min($prices);
             $max = max($prices);
 
             return $min === $max
-                ? Money::format($min)
-                : Money::format($min).' – '.Money::format($max);
+                ? Money::format($min, $currency)
+                : Money::format($min, $currency).' – '.Money::format($max, $currency);
         }
 
-        return Money::format($this->effectivePriceCents());
+        return Money::format($this->effectivePriceCents(), $currency);
     }
 
     /** @return list<int> */

@@ -19,6 +19,7 @@ use App\Support\MediaUrl;
     'body',
     'featured_image',
     'is_published',
+    'is_featured',
     'published_at',
     'seo_title',
     'seo_description',
@@ -31,6 +32,7 @@ class Post extends Model
     {
         return [
             'is_published' => 'boolean',
+            'is_featured' => 'boolean',
             'published_at' => 'datetime',
         ];
     }
@@ -92,5 +94,31 @@ class Post extends Model
         }
 
         return MediaUrl::absolutePath($reference) !== null;
+    }
+
+    /**
+     * Estimated reading time from the article body (200 wpm).
+     * Returns null when there is not enough body content to estimate.
+     */
+    public function readingTimeMinutes(): ?int
+    {
+        $text = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $this->body)) ?? '');
+
+        if ($text === '') {
+            return null;
+        }
+
+        $words = str_word_count($text);
+
+        if ($words < 1) {
+            return null;
+        }
+
+        return max(1, (int) ceil($words / 200));
+    }
+
+    public function featuredImageAlt(): string
+    {
+        return $this->hasCustomFeaturedImage() ? $this->title : '';
     }
 }
