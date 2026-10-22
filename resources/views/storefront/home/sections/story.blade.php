@@ -7,6 +7,12 @@
             'icon' => 'leaf',
         ],
     ];
+    $stepDetails = [
+        'Our review includes the source, available specifications and information needed for a clear label.',
+        'We discuss suitable combinations and review the intended role of each ingredient.',
+        'Supplier specifications and supporting documentation guide the questions we ask our partners.',
+        'Readable labels, relevant precautions and thoughtful packing help keep product information close at hand.',
+    ];
     $ctaUrl = $section->cta_url ?: '/pages/about';
     $ctaLabel = $section->cta_label ?: 'Discover Our Approach';
     $visualSrc = filled($section->image_path)
@@ -91,7 +97,7 @@
                             </span>
                             <h3 class="home-approach__card-title">{{ $beat['title'] ?? '' }}</h3>
                             @if (! empty($beat['body']))
-                                <p class="home-approach__card-body">{{ $beat['body'] }}</p>
+                                <p class="home-approach__card-body">{{ $beat['body'] }} {{ $beat['detail'] ?? ($stepDetails[$i] ?? '') }}</p>
                             @endif
                         </article>
                     </li>

@@ -36,8 +36,7 @@
         @endif
 
         <a href="{{ route('blog.show', $post->slug) }}" class="home-education__more-link">
-            Learn More
-            <span aria-hidden="true">→</span>
+            {{ $articleLabel ?? 'Learn More' }}
         </a>
     </div>
 </article>

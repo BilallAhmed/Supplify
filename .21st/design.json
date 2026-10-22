@@ -81,6 +81,48 @@
         "https://mysupplementandmore.com/"
       ],
       "implementation": "Own local product compositions, accessible two-scene campaign, visible section mask and typography reveals. Approved rail and fonts preserved."
+    },
+    {
+      "id": "supplify-homepage-hero-campaign",
+      "direction": "Layered studio campaign hero with coordinated typography and grounded product scenes",
+      "references": [
+        "https://demo2.wpopal.com/nutreko/home-4/"
+      ],
+      "implementation": "Blade + GSAP campaign slider using campaign-*.webp studio plates (no cutout bottles), accent/rest headline phrases, continuous dark-teal stage, ambient scene zoom + mist, crossfade transitions, Play/Pause and reduced-motion fallbacks"
+    },
+    {
+      "id": "supplify-goal-gallery",
+      "direction": "Photo goal gallery in the Supplify theme",
+      "implementation": "Four wellness categories, uppercase Plus Jakarta Sans 800 heading with teal/emerald split, theme category/body fonts, rounded imagery, independent image zoom and Shop Now button hover with revealing forward arrow. Category uploads override generated defaults."
+    },
+    {
+      "id": "supplify-featured-grid",
+      "direction": "Reference-led featured products promotional grid",
+      "implementation": "Five-column grid with two-column dark photographic promotion and eight unique products. Existing wishlist/quick-view/cart actions, restrained product image fill, hover/focus commerce reveal, no compare and no scroll pinning. Preserve temporary-pricing restrictions."
+    },
+    {
+      "id": "supplify-wellness-banner-pair",
+      "direction": "Two wellness campaign banners with separate product and lifestyle layers",
+      "implementation": "2:1 desktop layout, original product PNGs, generated teal stone backgrounds, original CoQ10/NADH/Rutin cutouts all tilted right with near-level bases, once-per-document first-view fade from left, hover product-group scale, reversible scroll-linked natural-color yoga mat, towel and water still life, independent green Shop Now button. Reduced motion and GSAP cleanup preserved. Each new WebP stays under 100KB."
+    },
+    {
+      "id": "supplify-journey-daily-picks",
+      "direction": "Journey followed by product and lifestyle spotlight",
+      "implementation": "Remove Explore More. White uppercase Sofia Sans Condensed Journey heading, visible icons and expanded text, position-based stage triggers and progress path. Rounded consistent Discover CTA. Your Daily Essentials manual carousel uses shared Featured Products card markup, keyboard arrows, dots, inert inactive slides and a 87KB wellness photo."
+    },
+    {
+      "id": "supplify-why-choose",
+      "direction": "Warm trust section with original order-preparation image and moving values ribbon",
+      "implementation": "After Your Daily Essentials. Two columns, single-color Sofia heading, four honest reasons, angled emerald seamless marquee with pause and reduced-motion behavior. Get Started links to Contact Us; no phone or unverified trust statistics. Final WebP 57KB."
+    },
+    {
+      "id": "supplify-homepage-photo-refresh",
+      "direction": "Distinct wellness subjects and varied product exposure",
+      "implementation": "Energy uses focused desk hands, Immunity a mature outdoor portrait, Gut a face-free tea/comfort scene. Featured promotion uses face-free gentle strength imagery. Daily Essentials uses a distinct senior walking photograph. No repeated faces or fruit-and-nut scenes in these replacements. Right banner uses original Monolaurin and Berberine images instead of the hero mineral pair. All five replacement WebPs remain under 100KB."
+    },
+    {
+      "id": "homepage-admin-current-sections",
+      "decision": "Homepage editor follows the nine live storefront sections in fixed order. Section-specific forms replace generic JSON; existing media library and catalog selectors control all images, copy, banners, journey steps, reasons, ribbon text and article selections. Retired sections remain archived and disabled."
     }
   ],
   "evidence": [
@@ -93,5 +135,5 @@
       "source": "package.json"
     }
   ],
-  "generatedAt": "2026-10-21T15:13:29.430Z"
+  "generatedAt": "2026-10-21T15:13:29.43Z"
 }

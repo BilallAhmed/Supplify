@@ -76,7 +76,7 @@ class ProductCommerceActionsTest extends TestCase
         $this->assertSame(1, WishlistItem::query()->where('user_id', $user->id)->count());
     }
 
-    public function test_homepage_shows_explore_more_and_view_all_products(): void
+    public function test_homepage_shows_featured_products_and_commerce_actions(): void
     {
         $this->seed(CmsSeeder::class);
 
@@ -88,7 +88,7 @@ class ProductCommerceActionsTest extends TestCase
         ]);
 
         Product::factory()->create([
-            'name' => 'Explore Catalog Item',
+            'name' => 'Daily Essentials Item',
             'is_featured' => false,
             'is_active' => true,
             'published_at' => now()->subMinutes(30),
@@ -98,10 +98,10 @@ class ProductCommerceActionsTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('View All Products', false);
-        $response->assertSee('Explore More Formulas', false);
-        $response->assertSee('Explore Catalog Item', false);
+        $response->assertSee('Your Daily', false);
         $response->assertSee('Featured Rail Item', false);
-        $response->assertSee('Quick View', false);
+        $response->assertSee('Quick view', false);
+        $response->assertSee('data-product-action="quick-view"', false);
         $response->assertSee($featured->name, false);
     }
 

@@ -8,7 +8,7 @@
 
 <section
     id="education"
-    class="home-education home-band home-band--mist ui-section border-t border-line/40"
+    class="home-education home-band home-band--surface ui-section border-t border-line/40"
     aria-labelledby="education-heading"
 >
     <x-container>
@@ -32,18 +32,18 @@
                 role="list"
                 aria-label="Educational articles"
             >
-                @include('storefront.home.partials.education-cards', ['posts' => $posts])
+                @include('storefront.home.partials.education-cards', ['posts' => $posts, 'articleLabel' => $section->config['article_label'] ?? 'Learn More'])
             </div>
 
             <div class="home-education__actions">
-                <a href="{{ $blogUrl }}" class="home-education__view-all">
+                <a href="{{ $blogUrl }}" class="home-view-all">
                     {{ $blogLabel }}
                 </a>
             </div>
         @else
             <div class="home-education__empty">
                 <p>Insights will appear here as posts are published.</p>
-                <a href="{{ $blogUrl }}" class="home-education__view-all">{{ $blogLabel }}</a>
+                <a href="{{ $blogUrl }}" class="home-view-all">{{ $blogLabel }}</a>
             </div>
         @endif
     </x-container>

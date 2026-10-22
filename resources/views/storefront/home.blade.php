@@ -19,14 +19,12 @@
                 'section' => $section,
                 'heroSlides' => $heroSlides ?? collect(),
                 'featuredProducts' => $featuredProducts ?? collect(),
-                'exploreProducts' => $exploreProducts ?? collect(),
+                'dailyPicks' => $dailyPicks ?? collect(),
                 'goalCategories' => $goalCategories ?? collect(),
                 'educationPosts' => $educationPosts ?? null,
             ])
 
-            @if ($key === 'featured_products')
-                @include('storefront.home.sections.routine_campaign')
-            @endif
+
         @endforeach
     </div>
 @endsection

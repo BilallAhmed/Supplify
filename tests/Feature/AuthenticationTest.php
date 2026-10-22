@@ -71,7 +71,7 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $login->assertRedirect(route('account.profile.edit'));
+        $login->assertRedirect(route('account.dashboard'));
         $this->assertAuthenticatedAs($user);
 
         $logout = $this->post(route('logout'));

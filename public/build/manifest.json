@@ -1,14 +1,32 @@
 {
-  "_fit-product-cutout-DN5pYg0Q.js": {
-    "file": "assets/fit-product-cutout-DN5pYg0Q.js",
+  "_fit-product-cutout-DFilVYqB.js": {
+    "file": "assets/fit-product-cutout-DFilVYqB.js",
     "name": "fit-product-cutout"
   },
-  "_motion-prefs-BipBCMuc.js": {
-    "file": "assets/motion-prefs-BipBCMuc.js",
+  "_motion-prefs-BOTDG85o.js": {
+    "file": "assets/motion-prefs-BOTDG85o.js",
     "name": "motion-prefs"
   },
+  "node_modules/gsap/ScrollTrigger.js": {
+    "file": "assets/ScrollTrigger-BrDuEirF.js",
+    "name": "ScrollTrigger",
+    "src": "node_modules/gsap/ScrollTrigger.js",
+    "isDynamicEntry": true
+  },
+  "node_modules/gsap/index.js": {
+    "file": "assets/index-D4-8ALNT.js",
+    "name": "index",
+    "src": "node_modules/gsap/index.js",
+    "isDynamicEntry": true
+  },
+  "node_modules/lenis/dist/lenis.mjs": {
+    "file": "assets/lenis-CmVXbI3P.js",
+    "name": "lenis",
+    "src": "node_modules/lenis/dist/lenis.mjs",
+    "isDynamicEntry": true
+  },
   "resources/css/app.css": {
-    "file": "assets/app-COMAgphv.css",
+    "file": "assets/app-BsXsaG38.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -17,12 +35,14 @@
     ]
   },
   "resources/js/about.js": {
-    "file": "assets/about-Y8cSOaEM.js",
+    "file": "assets/about-DkX7xaNw.js",
     "name": "about",
     "src": "resources/js/about.js",
     "isEntry": true,
     "imports": [
-      "_motion-prefs-BipBCMuc.js"
+      "node_modules/gsap/index.js",
+      "node_modules/gsap/ScrollTrigger.js",
+      "_motion-prefs-BOTDG85o.js"
     ]
   },
   "resources/js/admin-dashboard.js": {
@@ -32,25 +52,32 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-CZv9RviG.js",
+    "file": "assets/app-CFGcLHjJ.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_fit-product-cutout-DN5pYg0Q.js"
+      "_fit-product-cutout-DFilVYqB.js"
+    ],
+    "dynamicImports": [
+      "node_modules/lenis/dist/lenis.mjs",
+      "node_modules/gsap/index.js",
+      "node_modules/gsap/ScrollTrigger.js"
     ]
   },
   "resources/js/home.js": {
-    "file": "assets/home-B4Prpr4L.js",
+    "file": "assets/home-BqI9uEmX.js",
     "name": "home",
     "src": "resources/js/home.js",
     "isEntry": true,
     "imports": [
-      "_motion-prefs-BipBCMuc.js",
-      "_fit-product-cutout-DN5pYg0Q.js"
+      "_motion-prefs-BOTDG85o.js",
+      "node_modules/gsap/index.js",
+      "node_modules/gsap/ScrollTrigger.js",
+      "_fit-product-cutout-DFilVYqB.js"
     ],
     "css": [
-      "assets/home-DWLRhl8o.css"
+      "assets/home-DDXbUkP3.css"
     ]
   }
 }

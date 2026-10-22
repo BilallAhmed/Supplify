@@ -1,4 +1,6 @@
 import './bootstrap';
+import './smooth-scroll';
+import './back-to-top';
 import './header-search';
 import './product-category-picker';
 import './product-editor';

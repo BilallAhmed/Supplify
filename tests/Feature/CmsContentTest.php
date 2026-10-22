@@ -7,6 +7,8 @@ use App\Models\NewsletterSubscriber;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\HomepageLayout;
+use Database\Seeders\CmsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,7 +18,7 @@ class CmsContentTest extends TestCase
 
     public function test_homepage_renders_enabled_sections_and_featured_products(): void
     {
-        $this->seed(\Database\Seeders\CmsSeeder::class);
+        $this->seed(CmsSeeder::class);
 
         Product::factory()->create([
             'name' => 'Featured Omega',
@@ -61,7 +63,7 @@ class CmsContentTest extends TestCase
     public function test_admin_can_manage_pages_and_homepage_sections(): void
     {
         $admin = User::factory()->admin()->create();
-        $this->seed(\Database\Seeders\CmsSeeder::class);
+        $this->seed(CmsSeeder::class);
 
         $this->actingAs($admin)
             ->post(route('admin.pages.store'), [
@@ -77,22 +79,16 @@ class CmsContentTest extends TestCase
 
         $section = HomepageSection::query()->where('key', 'hero')->firstOrFail();
 
-        $this->actingAs($admin)
-            ->put(route('admin.homepage.update', $section), [
-                'title' => 'Updated Hero',
-                'subtitle' => 'New eyebrow',
-                'body' => 'Fresh homepage copy.',
-                'cta_label' => 'Shop now',
-                'cta_url' => '/shop',
-                'is_enabled' => true,
-                'sort_order' => 5,
-                'config_json' => json_encode(['secondary_cta_label' => 'Learn', 'secondary_cta_url' => '#story']),
-            ])
-            ->assertRedirect(route('admin.homepage.edit'));
-
-        $section->refresh();
-        $this->assertSame('Updated Hero', $section->title);
-        $this->assertSame(5, $section->sort_order);
+        $data = ['is_enabled' => true];
+        $values = HomepageLayout::values($section);
+        foreach (HomepageLayout::fields('hero') as $field) {
+            data_set($data, $field['path'], data_get($values, $field['path']));
+        }
+        $data['config']['slides'][0]['title'] = 'Updated Hero';
+        $this->actingAs($admin)->put(route('admin.homepage.update', $section), $data)
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.homepage.edit', ['section' => 'hero']));
+        $this->assertSame('Updated Hero', $section->fresh()->config['slides'][0]['title']);
     }
 
     public function test_newsletter_subscription_stores_email(): void

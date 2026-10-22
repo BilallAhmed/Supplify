@@ -12,7 +12,7 @@
 
         <form method="POST" action="{{ route('newsletter.store') }}" class="home-newsletter__form">
             @csrf
-            <label for="newsletter-email" class="home-newsletter__label">Email</label>
+            <label for="newsletter-email" class="home-newsletter__label">{{ $section->config['email_label'] ?? 'Email' }}</label>
             <div class="home-newsletter__row">
                 <input
                     id="newsletter-email"
@@ -20,7 +20,7 @@
                     name="email"
                     required
                     value="{{ old('email') }}"
-                    placeholder="you@example.com"
+                    placeholder="{{ $section->config['email_placeholder'] ?? 'you@example.com' }}"
                     class="home-newsletter__input"
                     autocomplete="email"
                 >

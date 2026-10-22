@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\Post;
 use App\Models\Product;
 use App\Services\BlogService;
 use App\Services\ContentService;
 use App\Services\StorefrontCatalogService;
+use App\Support\HomepageLayout;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -20,9 +22,8 @@ class HomeController extends Controller
     public function __invoke(): View
     {
         $sections = $this->content->enabledHomepageSections();
-        $featuredLimit = (int) ($sections->get('featured_products')?->config['limit'] ?? 12);
+        $featuredLimit = max(1, min(8, (int) ($sections->get('featured_products')?->config['limit'] ?? 8)));
         $goalLimit = (int) ($sections->get('shop_by_goal')?->config['limit'] ?? 4);
-        $exploreLimit = (int) ($sections->get('explore_more')?->config['limit'] ?? 4);
         $educationLimit = (int) ($sections->get('education')?->config['limit'] ?? 3);
         $hero = $sections->get('hero');
 
@@ -30,26 +31,62 @@ class HomeController extends Controller
             ? $this->content->featuredProducts(max(1, $featuredLimit))
             : collect();
 
-        $exploreProducts = $sections->has('explore_more')
-            ? $this->content->exploreMoreProducts(
-                max(1, $exploreLimit),
-                $featuredProducts->pluck('id')->all()
-            )
-            : collect();
+        if ($sections->has('featured_products') && $featuredProducts->count() < $featuredLimit) {
+            $featuredProducts = $featuredProducts->concat(
+                $this->content->exploreMoreProducts(
+                    $featuredLimit - $featuredProducts->count(),
+                    $featuredProducts->pluck('id')->all()
+                )
+            )->unique('id')->values();
+        }
+
+        $featuredSelected = HomepageLayout::products($sections->get('featured_products')?->config['product_ids'] ?? []);
+        if ($featuredSelected->isNotEmpty()) {
+            $featuredProducts = $featuredSelected->concat($featuredProducts)->unique('id')->take($featuredLimit)->values();
+            if ($featuredProducts->count() < $featuredLimit) {
+                $featuredProducts = $featuredProducts->concat($this->content->exploreMoreProducts($featuredLimit - $featuredProducts->count(), $featuredProducts->pluck('id')->all()));
+            }
+        }
+        $dailyPicks = HomepageLayout::products($sections->get('daily_picks')?->config['product_ids'] ?? [])->take(3);
+        if ($dailyPicks->count() < 3) {
+            $dailyPicks = $dailyPicks->concat($this->content->exploreMoreProducts(3 - $dailyPicks->count(), array_merge($dailyPicks->pluck('id')->all(), $featuredProducts->pluck('id')->all())));
+        }
 
         $educationPosts = $sections->has('education')
             ? $this->blog->latestPublished(max(1, min(3, $educationLimit)))
             : collect();
 
+        $selectedPosts = collect(array_filter($sections->get('education')?->config['post_ids'] ?? []));
+        if ($selectedPosts->isNotEmpty()) {
+            $posts = Post::query()->published()->with('category')->whereIn('id', $selectedPosts)->get()->keyBy('id');
+            $educationPosts = $selectedPosts->map(fn ($id) => $posts->get($id))->filter()->concat($educationPosts)->unique('id')->take(max(1, min(3, $educationLimit)))->values();
+        }
+        $goalRows = $sections->get('shop_by_goal')?->config['goals'] ?? [];
+        $goalCategories = $this->catalog->activeCategories();
+        if ($goalRows) {
+            $indexed = $goalCategories->keyBy('id');
+            $goalCategories = collect($goalRows)->map(function ($row) use ($indexed) {
+                $category = isset($row['category_id']) ? $indexed->get($row['category_id']) : null;
+                if (! $category) {
+                    return null;
+                }
+                $category = clone $category;
+                $category->name = $row['title'] ?: $category->name;
+                $category->description = $row['body'];
+                $category->image_path = $row['image'];
+
+                return $category;
+            })->filter()->unique('id')->values();
+        }
         $heroSlides = $this->content->heroSlides($hero);
 
         return view('storefront.home', [
             'sections' => $sections,
             'heroSlides' => $heroSlides,
             'featuredProducts' => $featuredProducts,
-            'exploreProducts' => $exploreProducts,
+            'dailyPicks' => $dailyPicks,
             'goalCategories' => $sections->has('shop_by_goal')
-                ? $this->catalog->activeCategories()->take(max(1, $goalLimit))
+                ? $goalCategories->take(4)
                 : collect(),
             'educationPosts' => $educationPosts,
             'depthProduct' => $this->depthShowcaseProduct(

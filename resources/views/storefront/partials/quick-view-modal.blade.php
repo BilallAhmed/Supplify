@@ -1,5 +1,6 @@
 <div
     id="quick-view-root"
+    data-lenis-prevent
     x-data="quickViewModal()"
     x-cloak
     @keydown.escape.window="open && close()"

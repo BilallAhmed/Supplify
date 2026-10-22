@@ -43,7 +43,7 @@
     @livewireStyles
     @stack('head')
 </head>
-<body class="flex min-h-screen flex-col" x-data>
+<body class="flex min-h-screen flex-col" x-data data-smooth-scroll="{{ config('storefront.smooth_scroll') && request('smooth-scroll') !== 'off' ? 'true' : 'false' }}">
     @include('storefront.partials.tracking-body-start')
 
     <a
@@ -84,6 +84,7 @@
 
     @include('storefront.partials.footer')
     @include('storefront.partials.quick-view-modal')
+    @include('storefront.partials.back-to-top')
 
     <script>
         window.__wishlistIds = @json($wishlistIds ?? []);

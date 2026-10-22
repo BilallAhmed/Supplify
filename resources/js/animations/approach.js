@@ -91,117 +91,50 @@ function initColumnBalance(section, intro, timeline) {
     };
 }
 
-/**
- * Scroll-linked journey for Our Approach.
- * Path + active step share one scrubbed progress so jumps and pin refreshes stay in sync.
- */
+/** Each stage follows its real position instead of a compressed section range. */
 export function initApproach(root = document) {
     const section = root.querySelector('[data-home-approach]');
     if (!section) return () => {};
-
-    const intro = section.querySelector('[data-approach-intro]');
     const timeline = section.querySelector('[data-approach-timeline]');
     const stages = [...section.querySelectorAll('[data-approach-stage]')];
     const path = section.querySelector('[data-approach-path]');
-    const image = section.querySelector('.home-approach__visual-img');
-    const reduced = prefersReducedMotion();
-
     section.classList.add('is-ready');
-
-    const destroyBalance = initColumnBalance(section, intro, timeline);
-
-    if (reduced || stages.length === 0 || !timeline) {
+    const destroyBalance = initColumnBalance(section, section.querySelector('[data-approach-intro]'), timeline);
+    if (prefersReducedMotion() || !stages.length) {
         section.classList.add('is-static');
-        return () => {
-            destroyBalance();
-            section.classList.remove('is-ready', 'is-static');
-        };
+        return () => { destroyBalance(); section.classList.remove('is-ready', 'is-static'); };
     }
-
     const ctx = gsap.context(() => {
-        let active = -1;
-        const activate = (index) => {
+        const activate = index => {
             const next = Math.max(0, Math.min(stages.length - 1, index));
-            if (active === next) return;
-            active = next;
             stages.forEach((stage, i) => {
                 stage.classList.toggle('is-active', i === next);
                 stage.classList.toggle('is-seen', i < next);
+                if (i === next) stage.setAttribute('aria-current', 'step');
+                else stage.removeAttribute('aria-current');
             });
         };
-        activate(0);
-
-        const length = path && typeof path.getTotalLength === 'function'
-            ? (path.getTotalLength() || 100)
-            : 100;
-
-        if (path) {
-            gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
-        }
-
-        const applyProgress = (progress) => {
-            if (path) {
-                gsap.set(path, { strokeDashoffset: length * (1 - progress) });
-            }
-            if (progress <= 0.02) {
-                activate(0);
-                return;
-            }
-            if (progress >= 0.98) {
-                activate(stages.length - 1);
-                return;
-            }
-            activate(Math.floor(progress * stages.length));
+        const sync = () => {
+            let active = 0;
+            stages.forEach((stage, i) => { if (stage.getBoundingClientRect().top <= innerHeight * .35) active = i; });
+            activate(active);
         };
-
-        ScrollTrigger.create({
-            // Scrub across the section itself so #approach landings start at step 01,
-            // then path + nodes advance as the taller timeline scrolls through.
-            trigger: section,
-            start: 'top 20%',
-            end: 'bottom 55%',
-            scrub: 0.4,
-            invalidateOnRefresh: true,
-            onUpdate(self) {
-                applyProgress(self.progress);
-            },
-            onRefresh(self) {
-                applyProgress(self.progress);
-            },
-            onLeaveBack() {
-                applyProgress(0);
-            },
-        });
-
-        if (image) {
-            gsap.fromTo(
-                image,
-                { scale: 1.04 },
-                {
-                    scale: 1,
-                    ease: 'none',
-                    scrollTrigger: {
-                        trigger: section,
-                        start: 'top 70%',
-                        end: 'bottom 35%',
-                        scrub: 0.45,
-                        invalidateOnRefresh: true,
-                    },
-                },
-            );
+        stages.forEach((stage, i) => ScrollTrigger.create({
+            trigger: stage, start: 'top 35%', end: 'bottom 35%',
+            onEnter: () => activate(i), onEnterBack: () => activate(i),
+            onLeaveBack: () => activate(i - 1), onRefresh: sync,
+        }));
+        if (path) {
+            const length = path.getTotalLength?.() || 100;
+            gsap.fromTo(path, { strokeDasharray: length, strokeDashoffset: length }, {
+                strokeDashoffset: 0, ease: 'none',
+                scrollTrigger: { trigger: stages[0], endTrigger: stages.at(-1), start: 'top 35%', end: 'top 35%', scrub: .35, invalidateOnRefresh: true },
+            });
         }
-
-        // Featured pin spacing shifts document height after first paint — refresh until stable.
-        const refresh = () => ScrollTrigger.refresh();
-        requestAnimationFrame(() => requestAnimationFrame(refresh));
-        [300, 800, 1600].forEach((ms) => window.setTimeout(refresh, ms));
-        window.addEventListener('load', refresh, { once: true });
+        sync();
     }, section);
-
     return () => {
-        destroyBalance();
-        ctx.revert();
-        section.classList.remove('is-ready', 'is-static');
-        stages.forEach((stage) => stage.classList.remove('is-active', 'is-seen'));
+        destroyBalance(); ctx.revert(); section.classList.remove('is-ready', 'is-static');
+        stages.forEach(stage => { stage.classList.remove('is-active', 'is-seen'); stage.removeAttribute('aria-current'); });
     };
 }

@@ -1,29 +1,44 @@
-<section id="goals" class="home-goals home-goals--cards" aria-labelledby="goals-heading" data-goal-directory>
-    <x-container>
-        <header class="goal-cards__header">
-            <div>
-                <p class="editorial-kicker">{{ $section->subtitle ?: 'Find your everyday essentials' }}</p>
-                <h2 id="goals-heading">{{ $section->title ?: 'Shop by goal' }}</h2>
-                @if ($section->body)<p class="editorial-intro">{{ $section->body }}</p>@endif
-            </div>
-            <x-view-all-products />
+@php
+    $goalPhotos = [
+        'energy-focus' => 'images/homepage/goals/energy-focus.webp',
+        'sleep-recovery' => 'images/homepage/goals/sleep-recovery.webp',
+        'immunity-defense' => 'images/homepage/goals/immunity-defense.webp',
+        'gut-digestion' => 'images/homepage/goals/gut-digestion.webp',
+    ];
+@endphp
+<section id="goals" class="home-goals home-goals--gallery" aria-labelledby="goals-heading" data-goal-directory>
+    <x-container class="goal-gallery__container">
+        <header class="goal-gallery__header">
+            <h2 class="goal-gallery__heading" id="goals-heading">{{ $section->title ?: 'Shop by Goals' }}</h2>
         </header>
-        <div class="goal-cards__grid">
+        <div class="goal-gallery__grid">
             @forelse ($goalCategories as $category)
-                <a class="goal-cards__card" href="{{ route('shop.category', $category->slug) }}">
-                    <span class="goal-cards__icon" aria-hidden="true">
-                        @if ($category->customIconUrl())
-                            <img src="{{ $category->customIconUrl() }}" alt="" width="32" height="32" loading="lazy" decoding="async">
+                @php
+                    $photoPath = $goalPhotos[$category->slug] ?? null;
+                    $photo = $category->image_path ? \App\Support\HomepageLayout::image($category->image_path) : null;
+                    if (! $photo && $photoPath && is_file(public_path($photoPath))) {
+                        $photo = asset($photoPath).'?v='.filemtime(public_path($photoPath));
+                    }
+                @endphp
+                <article class="goal-gallery__card">
+                    <a class="goal-gallery__content" href="{{ route('shop.category', $category->slug) }}">
+                    <span class="goal-gallery__image">
+                        @if ($photo)
+                            <img src="{{ $photo }}" alt="" width="720" height="1008" loading="lazy" decoding="async">
                         @else
-                            <x-goal-icon :name="$category->resolvedIconKey()" />
+                            <span class="goal-gallery__fallback" aria-hidden="true"><x-goal-icon :name="$category->resolvedIconKey()" /></span>
                         @endif
                     </span>
-                    <h3>{{ $category->name }}</h3>
-                    @if ($category->description)<p>{{ $category->description }}</p>@endif
-                    <span class="goal-cards__browse" aria-hidden="true">Explore formulas <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                </a>
+                    <h3 class="goal-gallery__title">{{ $category->name }}</h3>
+                    </a>
+                    <p class="goal-gallery__description">{{ $category->description ?: 'Find your everyday essentials.' }}</p>
+                    <a class="goal-gallery__button" href="{{ route('shop.category', $category->slug) }}">
+                        <span>{{ $section->config['button_label'] ?? 'Shop Now' }}<span class="sr-only">: {{ $category->name }}</span></span>
+                        <svg class="goal-gallery__arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                </article>
             @empty
-                <p class="goal-cards__empty">Categories will be available soon.</p>
+                <p class="goal-gallery__empty">Categories will be available soon.</p>
             @endforelse
         </div>
     </x-container>

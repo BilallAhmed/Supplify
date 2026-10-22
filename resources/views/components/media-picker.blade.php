@@ -5,18 +5,20 @@
     'help' => null,
     'required' => false,
     'previewUrl' => null,
+    'fieldId' => null,
+    'useOld' => true,
 ])
 
 @php
     $dotName = rtrim(str_replace(['][', '[', ']'], ['.', '.', ''], (string) $name), '.');
-    $value = old($dotName, $value);
+    $value = $useOld ? old($dotName, $value) : $value;
     $value = is_string($value) ? $value : '';
     $resolvedUrl = $previewUrl ?: (\App\Support\MediaUrl::toUrl($value) ?: '');
     $filename = $value ? basename(str_replace('\\', '/', $value)) : '';
     $absolute = \App\Support\MediaUrl::absolutePath($value);
     $size = $absolute ? @getimagesize($absolute) : false;
     $dimensions = is_array($size) ? ($size[0].'×'.$size[1]) : '';
-    $fieldId = 'mp-'.md5($name);
+    $fieldId = $fieldId ?: 'mp-'.md5($name);
 @endphp
 
 <div

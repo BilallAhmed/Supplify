@@ -223,28 +223,29 @@ async function toggleWishlistButton(btn) {
 async function addSimpleToCart(btn) {
     const id = btn.getAttribute('data-product-id');
     if (! id) return;
-    const original = btn.textContent;
+    const label = btn.querySelector('[data-cart-label]') || btn;
+    const original = label.textContent;
     btn.disabled = true;
-    btn.textContent = 'Adding…';
+    label.textContent = 'Adding…';
     try {
         const { data } = await window.axios.post('/cart/items', {
             product_id: Number(id),
             quantity: 1,
         });
-        btn.textContent = 'Added';
+        label.textContent = 'Added';
         if (typeof data.cart_count === 'number') {
             window.dispatchEvent(new CustomEvent('cart-count-updated', { detail: { count: data.cart_count } }));
         }
         setTimeout(() => {
-            btn.textContent = original;
+            label.textContent = original;
             btn.disabled = false;
         }, 1200);
     } catch (err) {
         const errors = err?.response?.data?.errors;
         const first = errors ? Object.values(errors).flat()[0] : null;
-        btn.textContent = first ? 'Unavailable' : 'Try again';
+        label.textContent = first ? 'Unavailable' : 'Try again';
         setTimeout(() => {
-            btn.textContent = original;
+            label.textContent = original;
             btn.disabled = false;
         }, 1600);
     }

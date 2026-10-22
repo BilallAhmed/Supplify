@@ -5,6 +5,8 @@ import { initApproach } from './animations/approach';
 import { initFeatured } from './animations/featured-formulas';
 import { initHomePolish } from './animations/home-polish';
 import { initProductHover } from './animations/product-hover';
+import { initWhyChoose } from './animations/why-choose';
+import { initDailyPicks } from './animations/daily-picks';
 import { initRoutineCampaign } from './animations/routine-campaign';
 
 document.documentElement.classList.add('js-enabled');
@@ -17,15 +19,17 @@ function boot() {
     }
 
     const destroyHero = initHero();
-    // Featured pins first so later scroll sections measure against the final document height.
+    // Fit featured product cutouts before initializing later sections.
     const destroyFeatured = initFeatured();
     const destroyCampaign = initRoutineCampaign();
+    const destroyDailyPicks = initDailyPicks();
+    const destroyWhyChoose = initWhyChoose();
     const destroyApproach = initApproach();
     const destroyPolish = initHomePolish();
     const destroyProductHover = initProductHover();
 
     teardown = () => {
-        destroyProductHover?.(); destroyCampaign?.(); destroyHero?.(); destroyApproach?.(); destroyFeatured?.(); destroyPolish?.();
+        destroyWhyChoose?.(); destroyDailyPicks?.(); destroyProductHover?.(); destroyCampaign?.(); destroyHero?.(); destroyApproach?.(); destroyFeatured?.(); destroyPolish?.();
         teardown = null;
     };
 
