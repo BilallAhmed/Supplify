@@ -48,7 +48,7 @@
                     aria-label="Search media"
                 >
                 <x-button type="button" variant="outline" size="sm" @click="search()">Search</x-button>
-                <x-button type="button" variant="ghost" size="sm" @click="reindex()" title="Re-scan site images without copying files">Re-index</x-button>
+                <x-button type="button" variant="ghost" size="sm" @click="reindex()" data-tooltip="Re-scan site images without copying files">Re-index</x-button>
             </div>
 
             <div class="media-library__layout">

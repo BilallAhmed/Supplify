@@ -36,7 +36,7 @@ class ProductDetailPageTest extends TestCase
         $response->assertSee('productPdp', false);
         $response->assertSee('pdp__stage', false);
         $response->assertSee('Add to cart', false);
-        $response->assertSee('Hover to zoom', false);
+        $response->assertSee('Hover to magnify', false);
         $response->assertSee('About this formula', false);
         $response->assertSee('Key benefits', false);
         $response->assertSee('Formula details', false);

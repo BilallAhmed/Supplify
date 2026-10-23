@@ -22,7 +22,7 @@ class AdminDashboardAnalyticsTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)
-            ->get(route('admin.dashboard'))
+            ->get(route('admin.analytics'))
             ->assertOk()
             ->assertSee('Product analytics overview', false)
             ->assertSee('Product detail views', false)
@@ -48,7 +48,7 @@ class AdminDashboardAnalyticsTest extends TestCase
         $this->assertNotNull(app(ProductViewTracker::class)->trackingStartedAt());
 
         $this->actingAs($admin)
-            ->get(route('admin.dashboard', ['range' => '7']))
+            ->get(route('admin.analytics', ['range' => '7']))
             ->assertOk()
             ->assertSee('Tracked Magnesium', false)
             ->assertSee('Product views over time', false)
@@ -140,7 +140,7 @@ class AdminDashboardAnalyticsTest extends TestCase
             ProductActivity::query()->where('product_id', $product->id)->where('action', ProductActivity::ACTION_FEATURED)->exists()
         );
 
-        $this->get(route('admin.dashboard'))
+        $this->get(route('admin.analytics'))
             ->assertOk()
             ->assertSee('Product created', false)
             ->assertSee('Product updated', false)
@@ -172,7 +172,7 @@ class AdminDashboardAnalyticsTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin)
-            ->get(route('admin.dashboard', ['range' => '7']))
+            ->get(route('admin.analytics', ['range' => '7']))
             ->assertOk();
 
         $response->assertSee('Range Product', false);
@@ -193,7 +193,7 @@ class AdminDashboardAnalyticsTest extends TestCase
         $customer = User::factory()->customer()->create();
 
         $this->actingAs($customer)
-            ->get(route('admin.dashboard'))
+            ->get(route('admin.analytics'))
             ->assertForbidden();
     }
 }

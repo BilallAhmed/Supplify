@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Storefront;
 
+use App\Support\DeliveryRegions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,9 +21,9 @@ class AddressRequest extends FormRequest
             'line1' => ['required', 'string', 'max:180'],
             'line2' => ['nullable', 'string', 'max:180'],
             'city' => ['required', 'string', 'max:120'],
-            'state' => ['required', 'string', 'max:64'],
+            'state' => ['required', 'string', Rule::in(DeliveryRegions::forCountry($this->input('country', 'PK')))],
             'postal_code' => ['required', 'string', 'max:32'],
-            'country' => ['required', 'string', 'size:2', Rule::in(['US'])],
+            'country' => ['required', 'string', 'size:2', Rule::in(['PK'])],
             'phone' => ['nullable', 'string', 'max:32'],
             'is_default' => ['sometimes', 'boolean'],
         ];
@@ -32,7 +33,7 @@ class AddressRequest extends FormRequest
     {
         $this->merge([
             'is_default' => $this->boolean('is_default'),
-            'country' => strtoupper((string) ($this->input('country') ?: 'US')),
+            'country' => strtoupper((string) ($this->input('country') ?: 'PK')),
         ]);
     }
 }

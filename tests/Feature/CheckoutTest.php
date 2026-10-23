@@ -9,6 +9,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Notifications\OrderPlacedNotification;
+use App\Services\StoreSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -25,6 +26,7 @@ class CheckoutTest extends TestCase
 
     public function test_guest_can_place_cod_order_with_stock_decrement_and_email(): void
     {
+        app(StoreSettings::class)->putMany(['currency' => 'PKR']);
         Notification::fake();
 
         config([
@@ -65,6 +67,10 @@ class CheckoutTest extends TestCase
         $this->assertSame(4000, $order->subtotal_cents);
         $this->assertSame(599, $order->shipping_cents);
         $this->assertSame(4599, $order->total_cents);
+        $this->assertSame('PKR', $order->currency);
+        $this->assertSame('PKR 45.99', $order->totalFormatted());
+        $mail = (new OrderPlacedNotification($order))->toMail(new \stdClass);
+        $this->assertStringContainsString('PKR 40.00', implode(' ', $mail->introLines));
         $this->assertSame(9, $product->fresh()->stock_quantity);
         $this->assertDatabaseCount('cart_items', 0);
 
@@ -184,11 +190,23 @@ class CheckoutTest extends TestCase
             'shipping_line1' => '123 Wellness Ave',
             'shipping_line2' => '',
             'shipping_city' => 'Austin',
-            'shipping_state' => 'TX',
+            'shipping_state' => 'Sindh',
             'shipping_postal_code' => '78701',
-            'shipping_country' => 'US',
+            'shipping_country' => 'PK',
             'shipping_phone' => '555-0100',
             'notes' => 'Leave at door',
         ], $overrides);
+    }
+
+    public function test_checkout_restricts_delivery_to_pakistan(): void
+    {
+        $this->post(route('checkout.store'), $this->validCheckoutPayload(['shipping_country' => 'US']))
+            ->assertSessionHasErrors('shipping_country');
+    }
+
+    public function test_checkout_rejects_a_province_outside_the_selected_country(): void
+    {
+        $this->post(route('checkout.store'), $this->validCheckoutPayload(['shipping_country' => 'PK', 'shipping_state' => 'Texas']))
+            ->assertSessionHasErrors('shipping_state');
     }
 }

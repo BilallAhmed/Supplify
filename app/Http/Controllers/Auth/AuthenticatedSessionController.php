@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\CartService;
+use App\Services\WishlistService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,9 @@ class AuthenticatedSessionController extends Controller
     {
         $this->ensureIsNotRateLimited($request);
 
+        $adminLogin = $request->routeIs('admin.login.store');
         $credentials = $request->only('email', 'password');
+        $credentials['role'] = $adminLogin ? UserRole::Admin->value : UserRole::Customer->value;
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey($request));
@@ -52,8 +55,15 @@ class AuthenticatedSessionController extends Controller
 
         RateLimiter::clear($this->throttleKey($request));
         $request->session()->regenerate();
-        $this->cart->mergeForUser($user);
-        app(\App\Services\WishlistService::class)->mergeForUser($user);
+        if (! $adminLogin) {
+            $this->cart->mergeForUser($user);
+            app(WishlistService::class)->mergeForUser($user);
+        }
+        $intendedPath = parse_url((string) $request->session()->get('url.intended', ''), PHP_URL_PATH) ?: '';
+        $adminIntended = $intendedPath === '/admin' || str_starts_with($intendedPath, '/admin/');
+        if (($adminLogin && ! $adminIntended) || (! $adminLogin && $adminIntended)) {
+            $request->session()->forget('url.intended');
+        }
 
         if ($user->role === UserRole::Admin) {
             return redirect()->intended(route('admin.dashboard'));
@@ -72,7 +82,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()
-            ->route('home')
+            ->route($request->routeIs('admin.logout') ? 'admin.dashboard' : 'home')
             ->with('flash_success', 'You have been signed out.');
     }
 
@@ -94,6 +104,6 @@ class AuthenticatedSessionController extends Controller
 
     protected function throttleKey(LoginRequest $request): string
     {
-        return Str::lower($request->string('email')->toString()).'|'.$request->ip();
+        return ($request->routeIs('admin.login.store') ? 'admin|' : 'customer|').Str::lower($request->string('email')->toString()).'|'.$request->ip();
     }
 }

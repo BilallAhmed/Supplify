@@ -29,7 +29,7 @@
                     :value="old('currency', $currency)"
                     maxlength="3"
                     required
-                    help="ISO currency code (for example USD)."
+                    help="ISO currency code. Use PKR for Pakistani rupees."
                 />
             </div>
         </x-card>

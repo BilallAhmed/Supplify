@@ -7,8 +7,8 @@ export function initHomePolish(root=document){
     mm.add('(prefers-reduced-motion:no-preference)',()=>{
         const events=[];const late=gsap.context(()=>{},shell);
         const bind=(el,event,fn)=>{el.addEventListener(event,fn);events.push(()=>el.removeEventListener(event,fn));};
-        const titles=shell.querySelectorAll('#goals-heading,#featured-heading,#explore-heading h2,#education-heading,#newsletter-heading');
-        titles.forEach(title=>gsap.fromTo(title,{y:20,clipPath:'inset(0 0 100% 0)'},{y:0,clipPath:'inset(0 0 0% 0)',duration:.85,ease:'power3.out',clearProps:'transform,clipPath',scrollTrigger:{trigger:title,start:'top 90%',once:true}}));
+        const titles=shell.querySelectorAll('#goals-heading,#featured-heading,#approach-heading,#daily-picks-heading,#why-supplify-heading,#education-heading');
+        titles.forEach(title=>gsap.fromTo(title,{y:12,opacity:0},{y:0,opacity:1,duration:.6,ease:'power2.out',clearProps:'transform,opacity',scrollTrigger:{trigger:title,start:'top 92%',once:true}}));
         const scene=shell.querySelector('[data-editorial-scene]');
         if(scene){
             const image=scene.querySelector('img');

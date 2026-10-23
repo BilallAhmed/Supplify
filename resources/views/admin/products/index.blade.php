@@ -127,34 +127,10 @@
                                     aria-label="Select all on page"
                                 >
                             </th>
-                            <th
-                                class="relative w-10 text-center"
-                                x-data="{ tip: false }"
-                                @mouseenter="tip = true"
-                                @mouseleave="tip = false"
-                                @focusin="tip = true"
-                                @focusout="tip = false"
-                            >
-                                <button
-                                    type="button"
-                                    class="mx-auto inline-flex items-center justify-center text-ink-subtle hover:text-amber-400"
-                                    aria-describedby="featured-col-tip"
-                                >
-                                    <span class="sr-only">Featured</span>
-                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path d="M12 3.5l2.6 5.27 5.82.85-4.21 4.1 1 5.78L12 16.77l-5.21 2.73 1-5.78-4.21-4.1 5.82-.85L12 3.5z"/>
-                                    </svg>
+                            <th class="w-10 text-center">
+                                <button type="button" class="mx-auto inline-flex items-center justify-center text-ink-subtle hover:text-brand" aria-label="Featured products" data-tooltip="Click a star to feature or unfeature on the homepage. Filled means featured.">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.5l2.6 5.27 5.82.85-4.21 4.1 1 5.78L12 16.77l-5.21 2.73 1-5.78-4.21-4.1 5.82-.85L9.4 8.77 12 3.5z"/></svg>
                                 </button>
-                                <div
-                                    id="featured-col-tip"
-                                    x-cloak
-                                    x-show="tip"
-                                    x-transition.opacity.duration.100ms
-                                    role="tooltip"
-                                    class="pointer-events-none absolute top-full left-0 z-20 mt-1 w-48 rounded-md border border-white/15 bg-[#1e2a26] px-2.5 py-2 text-left text-[11px] font-medium normal-case tracking-normal text-white shadow-lg"
-                                >
-                                    Click a star to feature or unfeature on the homepage. Filled = featured.
-                                </div>
                             </th>
                             <th>Product</th>
                             <th>SKU</th>
@@ -189,7 +165,7 @@
                                         <button
                                             type="submit"
                                             class="inline-flex size-7 items-center justify-center rounded-full transition {{ $product->is_featured ? 'text-amber-400 hover:bg-amber-400/10' : 'text-ink-subtle/70 hover:bg-surface-muted hover:text-amber-400' }}"
-                                            title="{{ $product->is_featured ? 'Remove from homepage featured' : 'Feature on homepage' }}"
+                                            data-tooltip="{{ $product->is_featured ? 'Remove from homepage featured' : 'Feature on homepage' }}"
                                             aria-label="{{ $product->is_featured ? 'Unfeature '.$product->name : 'Feature '.$product->name }}"
                                             aria-pressed="{{ $product->is_featured ? 'true' : 'false' }}"
                                         >

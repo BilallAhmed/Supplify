@@ -50,7 +50,7 @@ class CheckoutController extends Controller
                 'shipping_city' => old('shipping_city', $address?->city),
                 'shipping_state' => old('shipping_state', $address?->state),
                 'shipping_postal_code' => old('shipping_postal_code', $address?->postal_code),
-                'shipping_country' => old('shipping_country', $address?->country ?: 'US'),
+                'shipping_country' => old('shipping_country', $address?->country ?: 'PK'),
                 'shipping_phone' => old('shipping_phone', $address?->phone ?? $user?->phone),
             ],
         ]);

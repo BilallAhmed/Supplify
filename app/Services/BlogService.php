@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Enums\AssistantSourceType;
 use App\Models\Post;
 use App\Models\PostCategory;
 use App\Models\Tag;
+use App\Services\Assistant\AssistantKnowledgeSync;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,6 +17,7 @@ class BlogService
 {
     public function __construct(
         private readonly MediaService $media,
+        private readonly AssistantKnowledgeSync $assistantKnowledge,
     ) {}
 
     /**
@@ -241,7 +244,11 @@ class BlogService
 
         $this->syncTags($post, $data['tags'] ?? null);
 
-        return $post->fresh(['category', 'tags', 'author']);
+        $fresh = $post->fresh(['category', 'tags', 'author']);
+        // Tag pivots do not emit post updated — refresh assistant knowledge explicitly.
+        $this->assistantKnowledge->queueSource(AssistantSourceType::Post, (int) $fresh->id);
+
+        return $fresh;
     }
 
     public function delete(Post $post): void
@@ -250,8 +257,10 @@ class BlogService
             $this->media->deletePublicFile($post->featured_image);
         }
 
+        $postId = (int) $post->id;
         $post->tags()->detach();
         $post->delete();
+        $this->assistantKnowledge->queueSource(AssistantSourceType::Post, $postId);
     }
 
     public function uniqueSlug(string $title, ?int $ignoreId = null): string

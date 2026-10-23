@@ -202,7 +202,7 @@ function syncWishlistButtons(ids) {
             'aria-label',
             saved ? `Remove ${name} from favorites` : `Save ${name} to favorites`,
         );
-        btn.title = saved ? 'Saved to favorites' : 'Save to favorites';
+        btn.dataset.tooltip = saved ? 'Saved to favorites' : 'Save to favorites';
     });
 }
 

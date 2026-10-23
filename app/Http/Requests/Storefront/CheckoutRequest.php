@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Storefront;
 
 use App\Enums\PaymentMethod;
+use App\Support\DeliveryRegions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,18 +29,18 @@ class CheckoutRequest extends FormRequest
             'shipping_line1' => ['required', 'string', 'max:180'],
             'shipping_line2' => ['nullable', 'string', 'max:180'],
             'shipping_city' => ['required', 'string', 'max:120'],
-            'shipping_state' => ['required', 'string', 'max:64'],
+            'shipping_state' => ['required', 'string', Rule::in(DeliveryRegions::forCountry($this->input('shipping_country', 'PK')))],
             'shipping_postal_code' => ['required', 'string', 'max:32'],
-            'shipping_country' => ['required', 'string', 'size:2', Rule::in(['US'])],
+            'shipping_country' => ['required', 'string', 'size:2', Rule::in(['PK'])],
             'shipping_phone' => ['nullable', 'string', 'max:32'],
 
             'billing_name' => [$billingRequired ? 'required' : 'nullable', 'string', 'max:160'],
             'billing_line1' => [$billingRequired ? 'required' : 'nullable', 'string', 'max:180'],
             'billing_line2' => ['nullable', 'string', 'max:180'],
             'billing_city' => [$billingRequired ? 'required' : 'nullable', 'string', 'max:120'],
-            'billing_state' => [$billingRequired ? 'required' : 'nullable', 'string', 'max:64'],
+            'billing_state' => [$billingRequired ? 'required' : 'nullable', 'string', Rule::in(DeliveryRegions::forCountry($this->input('billing_country', 'PK')))],
             'billing_postal_code' => [$billingRequired ? 'required' : 'nullable', 'string', 'max:32'],
-            'billing_country' => [$billingRequired ? 'required' : 'nullable', 'string', 'size:2', Rule::in(['US'])],
+            'billing_country' => [$billingRequired ? 'required' : 'nullable', 'string', 'size:2', Rule::in(['PK'])],
             'billing_phone' => ['nullable', 'string', 'max:32'],
         ];
     }
@@ -49,8 +50,8 @@ class CheckoutRequest extends FormRequest
         $this->merge([
             'billing_same_as_shipping' => $this->boolean('billing_same_as_shipping', true),
             'payment_method' => $this->input('payment_method') ?: PaymentMethod::Cod->value,
-            'shipping_country' => strtoupper((string) ($this->input('shipping_country') ?: 'US')),
-            'billing_country' => strtoupper((string) ($this->input('billing_country') ?: 'US')),
+            'shipping_country' => strtoupper((string) ($this->input('shipping_country') ?: 'PK')),
+            'billing_country' => strtoupper((string) ($this->input('billing_country') ?: 'PK')),
         ]);
     }
 }

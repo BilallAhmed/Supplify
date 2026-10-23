@@ -32,7 +32,7 @@ class AddressController extends Controller
         return view('storefront.account.addresses.create', [
             'address' => new Address([
                 'type' => 'shipping',
-                'country' => 'US',
+                'country' => 'PK',
                 'is_default' => false,
             ]),
         ]);

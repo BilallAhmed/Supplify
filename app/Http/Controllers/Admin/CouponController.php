@@ -16,11 +16,15 @@ class CouponController extends Controller
     {
         $this->authorize('viewAny', Coupon::class);
 
+        $request->validate(['expiry' => ['nullable', 'in:expired,upcoming,none']]);
         $coupons = Coupon::query()
             ->when($request->filled('q'), function ($q) use ($request) {
                 $term = '%'.$request->string('q').'%';
                 $q->where('code', 'like', $term);
             })
+            ->when($request->input('expiry') === 'expired', fn ($q) => $q->where('ends_at', '<', now()))
+            ->when($request->input('expiry') === 'upcoming', fn ($q) => $q->whereBetween('ends_at', [now(), now()->addDays(30)]))
+            ->when($request->input('expiry') === 'none', fn ($q) => $q->whereNull('ends_at'))
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();

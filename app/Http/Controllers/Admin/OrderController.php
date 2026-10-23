@@ -11,6 +11,8 @@ use App\Http\Requests\Admin\OrderUpdateRequest;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -19,6 +21,13 @@ class OrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
+        $request->validate([
+            'status' => ['nullable', Rule::enum(OrderStatus::class)],
+            'payment_status' => ['nullable', Rule::enum(PaymentStatus::class)],
+            'fulfillment_status' => ['nullable', Rule::enum(FulfillmentStatus::class)],
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d', ...($request->filled('from') ? ['after_or_equal:from'] : [])],
+        ]);
         $orders = Order::query()
             ->withCount('items')
             ->when($request->filled('q'), function ($q) use ($request) {
@@ -30,6 +39,10 @@ class OrderController extends Controller
                 });
             })
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when($request->filled('payment_status'), fn ($q) => $q->where('payment_status', $request->input('payment_status')))
+            ->when($request->filled('fulfillment_status'), fn ($q) => $q->where('fulfillment_status', $request->input('fulfillment_status')))
+            ->when($request->filled('from'), fn ($q) => $q->where('placed_at', '>=', Carbon::parse($request->input('from'))->startOfDay()))
+            ->when($request->filled('to'), fn ($q) => $q->where('placed_at', '<', Carbon::parse($request->input('to'))->addDay()->startOfDay()))
             ->orderByDesc('placed_at')
             ->orderByDesc('id')
             ->paginate(20)

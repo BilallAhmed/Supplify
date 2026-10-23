@@ -15,6 +15,7 @@
 @section('content')
     <div class="home-shell">
         @foreach ($sections as $key => $section)
+            @continue($key === 'newsletter')
             @includeIf('storefront.home.sections.'.$key, [
                 'section' => $section,
                 'heroSlides' => $heroSlides ?? collect(),

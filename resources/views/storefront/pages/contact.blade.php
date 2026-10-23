@@ -126,7 +126,7 @@
                                         id="contact-name"
                                         name="name"
                                         type="text"
-                                        label="Full name *"
+                                        label="Full name"
                                         autocomplete="name"
                                         required
                                         aria-required="true"
@@ -139,7 +139,7 @@
                                         id="contact-email"
                                         name="email"
                                         type="email"
-                                        label="Email address *"
+                                        label="Email address"
                                         autocomplete="email"
                                         inputmode="email"
                                         required
@@ -164,7 +164,7 @@
                                     <x-select
                                         id="contact-enquiry-type"
                                         name="enquiry_type"
-                                        label="Enquiry type *"
+                                        label="Enquiry type"
                                         required
                                         aria-required="true"
                                     >
@@ -179,7 +179,7 @@
                                     <x-textarea
                                         id="contact-message"
                                         name="message"
-                                        label="Message *"
+                                        label="Message"
                                         rows="6"
                                         required
                                         aria-required="true"

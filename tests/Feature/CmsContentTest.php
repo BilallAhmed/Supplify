@@ -34,7 +34,7 @@ class CmsContentTest extends TestCase
         $response->assertOk();
         $response->assertSee('Featured Omega', false);
         $response->assertSee('Shop by goal', false);
-        $response->assertSee('Stay in the loop', false);
+        $response->assertSee('Stay In The Loop', false);
         $response->assertSee('Our journey', false);
         $response->assertSee('Discover Our Approach', false);
         $response->assertDontSee('From the community', false);
@@ -113,5 +113,15 @@ class CmsContentTest extends TestCase
             ->assertRedirect(route('home'));
 
         $this->assertSame(1, NewsletterSubscriber::query()->count());
+    }
+
+    public function test_newsletter_is_shared_once_and_validation_uses_its_own_bag(): void
+    {
+        foreach (['home', 'shop.index', 'blog.index', 'login'] as $route) {
+            $response = $this->get(route($route))->assertOk();
+            $this->assertSame(1, substr_count($response->getContent(), 'class="site-newsletter"'));
+        }
+        $this->from(route('shop.index'))->post(route('newsletter.store'), ['email' => 'invalid'])
+            ->assertRedirect(route('shop.index'))->assertSessionHasErrors(['email'], null, 'newsletter');
     }
 }

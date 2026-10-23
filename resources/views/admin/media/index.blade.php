@@ -20,12 +20,11 @@
         x-init="fetchPage(1)"
     >
         <div class="mb-4 flex flex-wrap gap-2">
-            <x-button type="button" variant="primary" @click="reindex()">Re-index site images</x-button>
-            <x-button type="button" variant="outline" @click="tab = 'upload'">Upload New</x-button>
+            <x-button type="button" variant="outline" size="sm" @click="reindex()">Re-index site images</x-button>
         </div>
         <div class="media-library__tabs !border-0 !px-0" role="tablist">
-            <button type="button" role="tab" class="media-library__tab" :class="{ 'is-active': tab === 'library' }" @click="tab = 'library'">Media Library</button>
-            <button type="button" role="tab" class="media-library__tab" :class="{ 'is-active': tab === 'upload' }" @click="tab = 'upload'">Upload New</button>
+            <button type="button" role="tab" class="media-library__tab" :aria-selected="tab === 'library'" :class="{ 'is-active': tab === 'library' }" @click="tab = 'library'">Media Library</button>
+            <button type="button" role="tab" class="media-library__tab" :aria-selected="tab === 'upload'" :class="{ 'is-active': tab === 'upload' }" @click="tab = 'upload'">Upload New</button>
         </div>
 
         <p x-show="notice" x-text="notice" class="media-library__notice !mx-0" role="status"></p>

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\ProductAttributeValue;
 use App\Models\ProductVariation;
+use App\Services\Assistant\AssistantKnowledgeSync;
 use App\Support\Measurements;
 use App\Support\Money;
 use Illuminate\Http\UploadedFile;
@@ -22,6 +23,7 @@ class ProductVariationService
     public function __construct(
         private readonly MediaService $media,
         private readonly CatalogService $catalog,
+        private readonly AssistantKnowledgeSync $assistantKnowledge,
     ) {}
 
     /**
@@ -222,6 +224,7 @@ class ProductVariationService
             $product->load('variations');
             $product->syncStockStatus();
             $product->save();
+            $this->assistantKnowledge->queueProduct((int) $product->id);
         });
     }
 

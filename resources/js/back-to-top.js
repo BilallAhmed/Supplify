@@ -8,6 +8,7 @@ function initBackToTop() {
     const update = () => {
         const visible = window.scrollY > 480;
         button.classList.toggle('is-visible', visible);
+        document.documentElement.classList.toggle('back-to-top-visible', visible);
         button.inert = !visible;
         button.tabIndex = visible ? 0 : -1;
         queued = false;

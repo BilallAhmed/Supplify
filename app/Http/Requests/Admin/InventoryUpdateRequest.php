@@ -14,6 +14,7 @@ class InventoryUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'manage_stock' => ['sometimes', 'boolean'],
             'stock_quantity' => ['required', 'integer', 'min:0', 'max:1000000'],
             'low_stock_threshold' => ['required', 'integer', 'min:0', 'max:100000'],
         ];

@@ -11,6 +11,6 @@
     @elseif ($variable && ! $temporary)
         <button type="button" class="product-tile__btn product-tile__btn--primary" data-product-action="quick-view" data-product-slug="{{ $product->slug }}" aria-label="Select options for {{ $product->name }}">Select Options</button>
     @else
-        <button type="button" class="product-tile__btn product-tile__btn--primary" disabled title="{{ $temporary ? 'Available to purchase once pricing is confirmed' : 'Currently unavailable for purchase' }}">Add to Cart</button>
+        <button type="button" class="product-tile__btn product-tile__btn--primary" disabled data-tooltip="{{ $temporary ? 'Available to purchase once pricing is confirmed' : 'Currently unavailable for purchase' }}">Add to Cart</button>
     @endif
 </div>

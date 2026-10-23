@@ -82,9 +82,13 @@
         @yield('content')
     </main>
 
+    @include('storefront.partials.newsletter')
     @include('storefront.partials.footer')
     @include('storefront.partials.quick-view-modal')
     @include('storefront.partials.back-to-top')
+    @if (! empty($assistantEnabled))
+        @include('storefront.partials.assistant-widget')
+    @endif
 
     <script>
         window.__wishlistIds = @json($wishlistIds ?? []);

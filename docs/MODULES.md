@@ -224,15 +224,16 @@ Cross-cutting SEO, security, and performance are applied **during** each module,
 | **DoD** | Valid coupon changes totals; invalid rejected server-side |
 | **Status** | COMPLETED — admin CRUD + cart apply; usage count increments at checkout (Module 10/12) |
 
-### Module 14 — AI Sticky Chatbot
+### Module 14 — Supplify Assistant (website-only)
 
 | | |
 |--|--|
-| **Purpose** | Product-aware assistant |
-| **Features** | Sticky UI, grounded answers, product links, fallbacks, disclaimers |
-| **Dependencies** | 04, 05, content; AI provider TBC |
-| **Security** | Server-side keys; rate limit; no medical claims |
-| **DoD** | Recommends real products with real URLs; refuses medical advice |
+| **Purpose** | Product-aware shopping assistant using approved website content only |
+| **Features** | Guided intents, structured response cards, live price/stock later, sticky widget later, admin approval/FAQ |
+| **Dependencies** | 04, 05, CMS pages/blog; **no** external AI API |
+| **Security** | Explicit knowledge approval; rate limits; medical boundaries; no private orders/profiles |
+| **DoD** | Real eligible product/page links only; honest unknowns; refuses diagnosis/prescription |
+| **Status** | COMPLETED — website-only guided assistant (Layers 1–7); dual-gate enablement; no AI API |
 
 ### Module 15 — SEO Hardening
 

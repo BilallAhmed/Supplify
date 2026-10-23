@@ -45,7 +45,6 @@
         mobileNav: false,
         collapsed: localStorage.getItem('adminSidebarCollapsed') === '1',
         darkMode: localStorage.getItem('adminTheme') === 'dark',
-        tip: { show: false, label: '', x: 0, y: 0 },
         init() {
             this.applyTheme();
         },
@@ -60,15 +59,6 @@
         toggleCollapsed() {
             this.collapsed = ! this.collapsed;
             localStorage.setItem('adminSidebarCollapsed', this.collapsed ? '1' : '0');
-            this.tip.show = false;
-        },
-        showTip(el, label) {
-            if (! this.collapsed || ! window.matchMedia('(min-width: 1024px)').matches) return;
-            const r = el.getBoundingClientRect();
-            this.tip = { show: true, label, x: r.right + 10, y: r.top + r.height / 2 };
-        },
-        hideTip() {
-            this.tip.show = false;
         },
     }"
     :class="{ 'admin-nav-collapsed': collapsed, 'admin-nav-open': mobileNav }"
@@ -111,13 +101,5 @@
     @include('admin.partials.media-library-modal')
     @stack('scripts')
 
-    <div
-        x-cloak
-        x-show="tip.show"
-        class="pointer-events-none fixed z-[100] -translate-y-1/2 rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap"
-        :style="`top:${tip.y}px;left:${tip.x}px;background:#1e2a26;color:#fff;border:1px solid rgba(255,255,255,0.18);box-shadow:0 8px 24px rgba(0,0,0,0.55);opacity:1`"
-        x-text="tip.label"
-        role="tooltip"
-    ></div>
 </body>
 </html>

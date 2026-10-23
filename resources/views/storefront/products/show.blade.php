@@ -47,7 +47,7 @@
         $hasAbout || $hasBenefits ? ['id' => 'pdp-overview', 'label' => 'Overview'] : null,
         $hasFormula ? ['id' => 'pdp-formula', 'label' => 'Ingredients'] : null,
         $hasDirections ? ['id' => 'pdp-directions', 'label' => 'Directions'] : null,
-        $related->isNotEmpty() ? ['id' => 'pdp-related', 'label' => 'Related'] : null,
+
     ]);
 
     $backLabelIndex = $product->images->count() > 1 ? 1 : null;
@@ -141,8 +141,9 @@
                                     >
                                 </button>
 
+                                <div class="pdp__magnifier" x-show="zoomEnabled && zoomActive" :style="lensStyle" x-cloak aria-hidden="true"></div>
                                 <p class="pdp__zoom-hint" x-show="zoomEnabled && !zoomActive" x-cloak>
-                                    Hover to zoom
+                                    Hover to magnify · click to expand
                                 </p>
 
                                 <button
@@ -315,18 +316,20 @@
                 </div>
             </div>
 
-            @if (count($sectionLinks) >= 2)
-                <nav class="pdp__toc" aria-label="On this page">
-                    <ul>
-                        @foreach ($sectionLinks as $link)
-                            <li><a href="#{{ $link['id'] }}">{{ $link['label'] }}</a></li>
-                        @endforeach
-                    </ul>
-                </nav>
-            @endif
-
+            @if (count($sectionLinks))
+            <div class="pdp__details-tabs" x-data="productDetailsTabs(@js(array_column($sectionLinks, 'id')))">
+                <div class="pdp__tabs" role="tablist" aria-label="Product information"
+                    @keydown.right.prevent="move(1)" @keydown.left.prevent="move(-1)"
+                    @keydown.home.prevent="choose(tabs[0], true)" @keydown.end.prevent="choose(tabs[tabs.length - 1], true)">
+                    @foreach ($sectionLinks as $link)
+                        <button type="button" role="tab" id="tab-{{ $link['id'] }}"
+                            aria-controls="{{ $link['id'] }}" :aria-selected="active === '{{ $link['id'] }}'"
+                            :tabindex="active === '{{ $link['id'] }}' ? 0 : -1"
+                            @click="choose('{{ $link['id'] }}')">{{ $link['label'] }}</button>
+                    @endforeach
+                </div>
             @if ($hasAbout || $hasBenefits)
-                <div id="pdp-overview" class="pdp__band">
+                <div id="pdp-overview" role="tabpanel" tabindex="0" aria-labelledby="tab-pdp-overview" x-show="active === 'pdp-overview'" x-cloak class="pdp__band">
                     @if ($hasAbout)
                         <section class="pdp__section pdp__section--editorial" aria-labelledby="pdp-about-heading">
                             <h2 id="pdp-about-heading" class="pdp__section-title font-display">About this formula</h2>
@@ -348,7 +351,7 @@
             @endif
 
             @if ($hasFormula)
-                <section id="pdp-formula" class="pdp__section pdp__section--panel" aria-labelledby="pdp-formula-heading">
+                <section id="pdp-formula" role="tabpanel" tabindex="0" aria-labelledby="tab-pdp-formula" x-show="active === 'pdp-formula'" x-cloak class="pdp__section pdp__section--panel">
                     <div class="pdp__section-head">
                         <h2 id="pdp-formula-heading" class="pdp__section-title font-display">Formula details</h2>
                         @if ($backLabelIndex !== null)
@@ -392,7 +395,7 @@
             @endif
 
             @if ($hasDirections)
-                <section id="pdp-directions" class="pdp__section" aria-labelledby="pdp-info-heading">
+                <section id="pdp-directions" role="tabpanel" tabindex="0" aria-labelledby="tab-pdp-directions" x-show="active === 'pdp-directions'" x-cloak class="pdp__section">
                     <h2 id="pdp-info-heading" class="pdp__section-title font-display">Directions and important information</h2>
                     <div class="pdp__accordions">
                         @if (filled($product->directions))
@@ -411,6 +414,9 @@
                 </section>
             @endif
 
+            </div>
+            @endif
+
             @if ($related->isNotEmpty())
                 <section id="pdp-related" class="pdp__related" aria-labelledby="related-heading">
                     <x-section-heading
@@ -420,7 +426,7 @@
                     />
                     <div class="pdp__related-grid">
                         @foreach ($related as $relatedProduct)
-                            <x-product-tile :product="$relatedProduct" />
+                            @include('storefront.home.partials.product_card', ['product' => $relatedProduct])
                         @endforeach
                     </div>
                 </section>

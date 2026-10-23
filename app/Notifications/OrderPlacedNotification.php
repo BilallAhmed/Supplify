@@ -35,7 +35,7 @@ class OrderPlacedNotification extends Notification implements ShouldQueue
             ->line('Total: '.Money::format($order->total_cents, $order->currency).'.');
 
         foreach ($order->items as $item) {
-            $mail->line($item->name.' × '.$item->quantity.' — '.Money::format($item->line_total_cents));
+            $mail->line($item->name.' × '.$item->quantity.' — '.Money::format($item->line_total_cents, $order->currency));
         }
 
         return $mail

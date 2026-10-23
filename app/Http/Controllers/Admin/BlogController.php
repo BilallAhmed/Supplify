@@ -21,6 +21,7 @@ class BlogController extends Controller
     {
         $this->authorize('viewAny', Post::class);
 
+        $request->validate(['status' => ['nullable', 'in:draft,published,scheduled'], 'category' => ['nullable', 'integer', 'exists:post_categories,id']]);
         $posts = Post::query()
             ->with(['category:id,name', 'author:id,name'])
             ->when($request->filled('q'), function ($q) use ($request) {
@@ -30,11 +31,15 @@ class BlogController extends Controller
                     ->orWhere('slug', 'like', $term)
                     ->orWhere('excerpt', 'like', $term));
             })
+            ->when($request->filled('category'), fn ($q) => $q->where('post_category_id', $request->integer('category')))
+            ->when($request->input('status') === 'draft', fn ($q) => $q->where(fn ($q) => $q->where('is_published', false)->orWhereNull('published_at')))
+            ->when($request->input('status') === 'published', fn ($q) => $q->published())
+            ->when($request->input('status') === 'scheduled', fn ($q) => $q->where('is_published', true)->where('published_at', '>', now()))
             ->latest()
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.blog.index', compact('posts'));
+        return view('admin.blog.index', ['posts' => $posts, 'categories' => PostCategory::query()->orderBy('name')->get()]);
     }
 
     public function create(): View

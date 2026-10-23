@@ -4,6 +4,7 @@
             'label' => 'Overview',
             'items' => [
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'dashboard'],
+                ['label' => 'Analytics', 'route' => 'admin.analytics', 'icon' => 'analytics'],
             ],
         ],
         [
@@ -35,8 +36,8 @@
         [
             'label' => 'System',
             'items' => [
-                ['label' => 'Settings', 'route' => 'admin.settings.edit', 'icon' => 'settings', 'match' => 'admin.settings.edit'],
-                ['label' => 'Tracking & Scripts', 'route' => 'admin.settings.tracking.edit', 'icon' => 'settings', 'match' => 'admin.settings.tracking.*'],
+                ['label' => 'Assistant', 'route' => 'admin.assistant.edit', 'icon' => 'settings', 'match' => 'admin.assistant.*'],
+                ['label' => 'Settings', 'route' => 'admin.settings.edit', 'icon' => 'settings', 'match' => 'admin.settings.*'],
             ],
         ],
     ];
@@ -88,13 +89,11 @@
                         <a
                             href="{{ route($item['route']) }}"
                             @click="mobileNav = false"
-                            @mouseenter="showTip($el, @js($item['label']))"
-                            @mouseleave="hideTip()"
-                            @focus="showTip($el, @js($item['label']))"
-                            @blur="hideTip()"
+
                             class="admin-sidebar__link {{ $active ? 'is-active' : '' }}"
                             @if ($active) aria-current="page" @endif
                             :aria-label="collapsed ? @js($item['label']) : false"
+                            :data-tooltip="collapsed ? @js($item['label']) : null"
                         >
                             <span class="inline-flex size-5 shrink-0 items-center justify-center text-white/50" aria-hidden="true">
                                 @include('admin.partials.nav-icon', ['name' => $item['icon']])
@@ -114,7 +113,7 @@
             @click="toggleCollapsed()"
             :aria-expanded="(! collapsed).toString()"
             :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-            :title="collapsed ? 'Expand menu' : 'Collapse menu'"
+            :data-tooltip="collapsed ? 'Expand menu' : 'Collapse menu'"
         >
             <span class="admin-sidebar__collapse-icon" aria-hidden="true">
                 <svg class="size-4 transition-transform duration-200" :class="collapsed ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
@@ -131,11 +130,9 @@
             class="admin-sidebar__link"
             target="_blank"
             rel="noopener"
-            @mouseenter="showTip($el, 'View storefront')"
-            @mouseleave="hideTip()"
-            @focus="showTip($el, 'View storefront')"
-            @blur="hideTip()"
+
             :aria-label="collapsed ? 'View storefront' : false"
+            :data-tooltip="collapsed ? 'View storefront' : null"
         >
             <span class="inline-flex size-5 shrink-0 items-center justify-center" aria-hidden="true">
                 <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">

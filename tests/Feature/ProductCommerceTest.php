@@ -194,10 +194,10 @@ class ProductCommerceTest extends TestCase
             'billing_same_as_shipping' => true,
             'shipping_name' => 'Buyer',
             'shipping_line1' => '1 Main St',
-            'shipping_city' => 'Austin',
-            'shipping_state' => 'TX',
-            'shipping_postal_code' => '78701',
-            'shipping_country' => 'US',
+            'shipping_city' => 'Lahore',
+            'shipping_state' => 'Punjab',
+            'shipping_postal_code' => '54000',
+            'shipping_country' => 'PK',
         ])->assertRedirect();
 
         $this->assertDatabaseCount('order_items', 2);

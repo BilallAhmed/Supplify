@@ -51,7 +51,7 @@
                 <a href="{{ route('account.profile.edit') }}" class="account-stat">
                     <span class="account-stat__glow" aria-hidden="true"></span>
                     <span class="account-stat__label">Profile</span>
-                    <span class="account-stat__value truncate text-[1.15rem] sm:text-xl" title="{{ $user->email }}">
+                    <span class="account-stat__value truncate text-[1.15rem] sm:text-xl" data-tooltip="{{ $user->email }}">
                         {{ $user->email }}
                     </span>
                     <span class="account-stat__meta">Edit contact &amp; password</span>

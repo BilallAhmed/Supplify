@@ -80,9 +80,9 @@ class CustomerAccountTest extends TestCase
                 'name' => 'Alex Buyer',
                 'line1' => '100 Green St',
                 'city' => 'Austin',
-                'state' => 'TX',
+                'state' => 'Sindh',
                 'postal_code' => '78701',
-                'country' => 'US',
+                'country' => 'PK',
                 'phone' => '555-0100',
                 'is_default' => '1',
             ])
@@ -99,9 +99,9 @@ class CustomerAccountTest extends TestCase
                 'name' => 'Alex Buyer',
                 'line1' => '200 Leaf Ave',
                 'city' => 'Austin',
-                'state' => 'TX',
+                'state' => 'Sindh',
                 'postal_code' => '78702',
-                'country' => 'US',
+                'country' => 'PK',
                 'is_default' => '1',
             ])
             ->assertRedirect(route('account.addresses.index'));
@@ -125,9 +125,9 @@ class CustomerAccountTest extends TestCase
             'name' => 'Other Person',
             'line1' => '1 Other St',
             'city' => 'Dallas',
-            'state' => 'TX',
+            'state' => 'Sindh',
             'postal_code' => '75201',
-            'country' => 'US',
+            'country' => 'PK',
             'is_default' => true,
         ]);
 

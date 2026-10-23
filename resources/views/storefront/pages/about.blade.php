@@ -32,6 +32,5 @@
         @include('storefront.pages.about._essentials', ['section' => $about['essentials'] ?? []])
         @include('storefront.pages.about._everyday', ['section' => $about['everyday'] ?? []])
         @include('storefront.pages.about._team', ['section' => $about['team'] ?? []])
-        @include('storefront.pages.about._cta', ['section' => $about['cta'] ?? []])
     </div>
 @endsection

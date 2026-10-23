@@ -266,7 +266,7 @@ class PlaceOrder
             'city' => trim((string) $input["{$prefix}_city"]),
             'state' => filled($input["{$prefix}_state"] ?? null) ? trim((string) $input["{$prefix}_state"]) : null,
             'postal_code' => trim((string) $input["{$prefix}_postal_code"]),
-            'country' => strtoupper(trim((string) ($input["{$prefix}_country"] ?? 'US'))),
+            'country' => strtoupper(trim((string) ($input["{$prefix}_country"] ?? 'PK'))),
             'phone' => filled($input["{$prefix}_phone"] ?? null) ? trim((string) $input["{$prefix}_phone"]) : null,
         ];
     }

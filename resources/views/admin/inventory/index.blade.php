@@ -11,6 +11,11 @@
 @endsection
 
 @section('content')
+    @if ($errors->any())
+        <div class="mb-4 rounded-lg border border-danger p-4 text-sm text-danger" role="alert">
+            @foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach
+        </div>
+    @endif
     <div class="admin-table-panel">
         <form method="GET" class="admin-toolbar">
             <div class="admin-toolbar__search">
@@ -54,6 +59,9 @@
                                 </x-badge>
                             </td>
                             <td colspan="3">
+                                @if ($product->isVariable())
+                                    <span class="text-sm text-ink-muted">Stock is managed per variation below.</span>
+                                @else
                                 <form method="POST" action="{{ route('admin.inventory.update', $product) }}" class="admin-inline-controls">
                                     @csrf
                                     @method('PUT')
@@ -65,8 +73,25 @@
                                     </div>
                                     <x-button type="submit" variant="primary" size="sm">Update</x-button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
+                        @if ($product->isVariable())
+                            @foreach ($product->variations as $variation)
+                                <tr>
+                                    <td class="text-ink-muted">↳ {{ implode(' / ', $variation->option_labels ?? []) ?: 'Variation' }} <span class="block text-xs">{{ $variation->is_enabled ? 'Enabled' : 'Disabled' }}</span></td>
+                                    <td class="font-mono text-xs">{{ $variation->sku }}</td>
+                                    <td><x-badge :variant="$variation->stock_status->badgeVariant()">{{ $variation->stock_status->label() }}</x-badge></td>
+                                    <td colspan="3"><form method="POST" action="{{ route('admin.inventory.variations.update', [$product, $variation->id]) }}" class="admin-inline-controls">
+                                        @csrf @method('PUT')
+                                        <label class="text-xs text-ink-muted"><input type="checkbox" name="manage_stock" value="1" @checked($variation->manage_stock)> Track stock</label>
+                                        <div class="admin-inline-controls__qty"><x-input name="stock_quantity" type="number" min="0" :value="$variation->stock_quantity" aria-label="Quantity for {{ $variation->sku }}" /></div>
+                                        <div class="admin-inline-controls__qty"><x-input name="low_stock_threshold" type="number" min="0" :value="$variation->low_stock_threshold" aria-label="Threshold for {{ $variation->sku }}" /></div>
+                                        <x-button type="submit" size="sm">Update</x-button>
+                                    </form></td>
+                                </tr>
+                            @endforeach
+                        @endif
                     @empty
                         <tr>
                             <td colspan="6" class="admin-data-table__empty">No products to manage. Create products first.</td>

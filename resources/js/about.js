@@ -1,3 +1,4 @@
+
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { prefersReducedMotion } from './animations/motion-prefs';

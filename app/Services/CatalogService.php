@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariation;
 use App\Models\Tag;
+use App\Services\Assistant\AssistantKnowledgeSync;
 use App\Support\Measurements;
 use App\Support\Money;
 use Illuminate\Http\UploadedFile;
@@ -20,6 +21,7 @@ class CatalogService
     public function __construct(
         private readonly MediaService $media,
         private readonly ProductActivityLogger $activity,
+        private readonly AssistantKnowledgeSync $assistantKnowledge,
     ) {}
 
     public function createProduct(array $data, array $categoryIds = [], array $relatedIds = [], ?UploadedFile $image = null): Product
@@ -38,6 +40,8 @@ class CatalogService
 
             $fresh = $product->fresh(['categories', 'tags', 'images', 'relatedProducts']);
             $this->activity->created($fresh);
+            // Pivot sync does not emit product updated — refresh assistant knowledge explicitly.
+            $this->assistantKnowledge->queueProduct((int) $fresh->id);
 
             return $fresh;
         });
@@ -59,6 +63,7 @@ class CatalogService
 
             $fresh = $product->fresh(['categories', 'tags', 'images', 'relatedProducts']);
             $this->activity->updated($fresh);
+            $this->assistantKnowledge->queueProduct((int) $fresh->id);
 
             return $fresh;
         });
@@ -101,6 +106,7 @@ class CatalogService
 
             $fresh = $copy->fresh(['categories', 'tags', 'images', 'relatedProducts']);
             $this->activity->created($fresh);
+            $this->assistantKnowledge->queueProduct((int) $fresh->id);
 
             return $fresh;
         });
@@ -116,6 +122,7 @@ class CatalogService
 
         $product->syncStockStatus();
         $product->save();
+        $this->assistantKnowledge->queueProduct((int) $product->id);
 
         return $product;
     }
@@ -135,6 +142,7 @@ class CatalogService
         Product::query()->whereIn('id', $ids)->each(function (Product $product) use ($active, &$count) {
             $this->applyPublishState($product, $active);
             $product->save();
+            $this->assistantKnowledge->queueProduct((int) $product->id);
             $count++;
         });
 
@@ -190,7 +198,9 @@ class CatalogService
                         $this->media->deletePublicFile($image->path);
                     }
                 }
+                $productId = (int) $product->id;
                 $product->delete();
+                $this->assistantKnowledge->queueProduct($productId);
                 $count++;
             });
 

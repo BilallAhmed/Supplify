@@ -17,7 +17,7 @@ class EnsureUserHasRole
         $user = $request->user();
 
         if (! $user) {
-            return redirect()->guest(route('login'));
+            return redirect()->guest(route($request->is('admin', 'admin/*') ? 'admin.dashboard' : 'login'));
         }
 
         if (! $user->is_active) {
@@ -26,7 +26,7 @@ class EnsureUserHasRole
             $request->session()->regenerateToken();
 
             return redirect()
-                ->route('login')
+                ->route($request->is('admin', 'admin/*') ? 'admin.dashboard' : 'login')
                 ->with('error', 'Your account is inactive. Please contact support.');
         }
 

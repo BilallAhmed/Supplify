@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\PreventBrowserCache;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -23,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+            'role' => EnsureUserHasRole::class,
         ]);
 
         // Set by the storefront consent banner (plain JSON); must not be encrypted.
@@ -31,9 +34,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'supplify_consent',
         ]);
 
-        $middleware->append(\App\Http\Middleware\PreventBrowserCache::class);
+        $middleware->append(PreventBrowserCache::class);
 
-        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*') ? route('admin.dashboard') : route('login'));
         $middleware->redirectUsersTo(function () {
             $user = auth()->user();
 

@@ -1,6 +1,13 @@
 import './bootstrap';
+import '../css/tooltips.css';
+import './tooltips';
+import '../css/page-headings.css';
+import '../css/newsletter.css';
+import '../css/product-cards.css';
+import '../css/assistant-widget.css';
 import './smooth-scroll';
 import './back-to-top';
+import './assistant-widget';
 import './header-search';
 import './product-category-picker';
 import './product-editor';

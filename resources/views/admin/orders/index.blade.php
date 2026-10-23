@@ -11,6 +11,11 @@
 @endsection
 
 @section('content')
+    @if ($errors->any())
+        <div class="mb-4 rounded-lg border border-danger p-4 text-sm text-danger" role="alert">
+            @foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach
+        </div>
+    @endif
     <div class="admin-table-panel">
         <form method="GET" class="admin-toolbar">
             <div class="admin-toolbar__search">
@@ -24,8 +29,8 @@
                     @endforeach
                 </x-select>
             </div>
-            <div class="admin-toolbar__actions">
-                @if (request()->filled('q') || request()->filled('status'))
+<div class="admin-toolbar__control"><x-select name="payment_status" aria-label="All payment statuses"><option value="">All payment statuses</option>@foreach (\App\Enums\PaymentStatus::cases() as $item)<option value="{{ $item->value }}" @selected(request('payment_status') === $item->value)>{{ $item->label() }}</option>@endforeach</x-select></div><div class="admin-toolbar__control"><x-select name="fulfillment_status" aria-label="All fulfillment statuses"><option value="">All fulfillment</option>@foreach (\App\Enums\FulfillmentStatus::cases() as $item)<option value="{{ $item->value }}" @selected(request('fulfillment_status') === $item->value)>{{ $item->label() }}</option>@endforeach</x-select></div><div class="admin-toolbar__control"><label class="text-xs text-ink-muted" for="orders-from">Placed from</label><x-input id="orders-from" type="date" name="from" :value="request('from')" /></div><div class="admin-toolbar__control"><label class="text-xs text-ink-muted" for="orders-to">Placed through</label><x-input id="orders-to" type="date" name="to" :value="request('to')" /></div><div class="admin-toolbar__actions">
+                @if (request()->anyFilled(['q', 'status', 'payment_status', 'fulfillment_status', 'from', 'to']))
                     <x-button href="{{ route('admin.orders.index') }}" variant="ghost" size="sm">Clear</x-button>
                 @endif
                 <x-button type="submit" variant="primary" size="sm">Apply filters</x-button>
@@ -62,7 +67,7 @@
                                 <span class="block text-xs">{{ $order->payment_status->label() }}</span>
                             </td>
                             <td>
-                                <x-badge variant="brand">{{ $order->status->label() }}</x-badge>
+                                <x-badge variant="brand">{{ $order->status->label() }}</x-badge><span class="block text-xs text-ink-muted">{{ $order->fulfillment_status->label() }}</span>
                             </td>
                             <td class="text-ink-muted whitespace-nowrap">
                                 {{ optional($order->placed_at)->timezone(config('app.timezone'))->format('M j, Y g:i A') ?? '—' }}

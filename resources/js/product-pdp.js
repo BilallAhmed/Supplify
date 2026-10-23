@@ -2,6 +2,18 @@
  * Storefront product detail page — gallery, hover zoom, lightbox, purchase sync.
  */
 document.addEventListener('alpine:init', () => {
+    Alpine.data('productDetailsTabs', (tabs = []) => ({
+        tabs, active: tabs[0] || '',
+        choose(id, focus = false) {
+            if (!this.tabs.includes(id)) return;
+            this.active = id;
+            if (focus) this.$nextTick(() => document.getElementById(`tab-${id}`)?.focus());
+        },
+        move(step) {
+            const index = (this.tabs.indexOf(this.active) + step + this.tabs.length) % this.tabs.length;
+            this.choose(this.tabs[index], true);
+        },
+    }));
     Alpine.data('productPdp', (payload = {}) => ({
         productType: payload.productType || 'simple',
         attributes: payload.attributes || [],
@@ -21,6 +33,7 @@ document.addEventListener('alpine:init', () => {
         zoomScale: 1.8,
         zoomX: 50,
         zoomY: 50,
+        lensStyle: {},
         naturalW: 0,
         naturalH: 0,
 
@@ -56,8 +69,7 @@ document.addEventListener('alpine:init', () => {
             const idx = this.gallery.findIndex((img) => img.url === startUrl);
             this.activeIndex = idx >= 0 ? idx : 0;
 
-            this.zoomEnabled = window.matchMedia('(hover: hover) and (pointer: fine)').matches
-                && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            this.zoomEnabled = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
             this.$watch('lightboxOpen', (open) => {
                 document.documentElement.classList.toggle('pdp-lightbox-open', open);
@@ -257,30 +269,33 @@ document.addEventListener('alpine:init', () => {
         },
 
         onZoomMove(event) {
-            if (!this.zoomEnabled || !this.zoomActive) return;
+            if (!this.zoomEnabled) return;
             const stage = this.$refs.zoomStage;
             const img = this.$refs.mainImage;
             if (!stage || !img || !this.naturalW) return;
 
             const stageRect = stage.getBoundingClientRect();
-            const contain = this.containRect(
-                stageRect.width,
-                stageRect.height,
-                this.naturalW,
-                this.naturalH,
-            );
-
+            const imageRect = img.getBoundingClientRect();
+            const contain = this.containRect(imageRect.width, imageRect.height, this.naturalW, this.naturalH);
+            const imageLeft = imageRect.left - stageRect.left + contain.left;
+            const imageTop = imageRect.top - stageRect.top + contain.top;
             const px = event.clientX - stageRect.left;
             const py = event.clientY - stageRect.top;
-
-            // Map pointer into the letterboxed image rectangle.
-            const relX = (px - contain.left) / contain.width;
-            const relY = (py - contain.top) / contain.height;
-            const cx = Math.min(1, Math.max(0, relX));
-            const cy = Math.min(1, Math.max(0, relY));
-
-            this.zoomX = cx * 100;
-            this.zoomY = cy * 100;
+            const inside = px >= imageLeft && px <= imageLeft + contain.width
+                && py >= imageTop && py <= imageTop + contain.height;
+            this.zoomActive = inside;
+            if (!inside) return;
+            const size = Math.min(190, stageRect.width * .42);
+            const half = size / 2;
+            const left = Math.max(0, Math.min(stageRect.width - size, px - half));
+            const top = Math.max(0, Math.min(stageRect.height - size, py - half));
+            const scale = Math.min(3.5, Math.max(1, this.naturalW / contain.width));
+            this.lensStyle = {
+                width: `${size}px`, height: `${size}px`, left: `${left}px`, top: `${top}px`,
+                backgroundImage: `url(${JSON.stringify(img.currentSrc || img.src)})`,
+                backgroundSize: `${contain.width * scale}px ${contain.height * scale}px`,
+                backgroundPosition: `${px - left - (px - imageLeft) * scale}px ${py - top - (py - imageTop) * scale}px`,
+            };
         },
 
         resetHoverZoom() {
@@ -303,13 +318,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         mainImageStyle() {
-            if (!this.zoomActive || !this.zoomEnabled) {
-                return {};
-            }
-            return {
-                transform: `scale(${this.zoomScale})`,
-                transformOrigin: `${this.zoomX}% ${this.zoomY}%`,
-            };
+            return {};
         },
 
         // —— Lightbox ——

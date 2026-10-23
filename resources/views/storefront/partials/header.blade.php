@@ -66,7 +66,7 @@
                         class="site-header__icon-btn site-header__search-toggle"
                         @click="openSearch()"
                         aria-label="Open search"
-                        title="Search"
+                        data-tooltip="Search"
                         :aria-expanded="searchOpen.toString()"
                     >
                         <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -197,7 +197,7 @@
                     </div>
                 </div>
 
-                <a href="{{ route('cart.index') }}" class="site-header__icon-btn relative" aria-label="Cart{{ ($cartCount ?? 0) > 0 ? ' ('.$cartCount.' items)' : '' }}" title="Cart">
+                <a href="{{ route('cart.index') }}" class="site-header__icon-btn relative" aria-label="Cart{{ ($cartCount ?? 0) > 0 ? ' ('.$cartCount.' items)' : '' }}" data-tooltip="Cart">
                     <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                         <path d="M3 5h2l1.6 9.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20 8H7" stroke-linecap="round" stroke-linejoin="round"/>
                         <circle cx="10" cy="20" r="1.2" fill="currentColor" stroke="none"/>
@@ -209,7 +209,7 @@
                 </a>
 
                 @auth
-                    <a href="{{ route('account.dashboard') }}" class="site-header__icon-btn" aria-label="Account" title="Account">
+                    <a href="{{ route('account.dashboard') }}" class="site-header__icon-btn" aria-label="Account" data-tooltip="Account">
                         <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                             <circle cx="12" cy="8" r="3.25"/>
                             <path d="M5.5 19.5c1.6-3.2 4-4.75 6.5-4.75s4.9 1.55 6.5 4.75" stroke-linecap="round"/>
@@ -217,10 +217,10 @@
                     </a>
                     <form method="POST" action="{{ route('logout') }}" class="hidden sm:block">
                         @csrf
-                        <button type="submit" class="site-header__text-btn" title="Sign out">Sign out</button>
+                        <button type="submit" class="site-header__text-btn" data-tooltip="Sign out">Sign out</button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" class="site-header__icon-btn" aria-label="Sign in" title="Sign in">
+                    <a href="{{ route('login') }}" class="site-header__icon-btn" aria-label="Sign in" data-tooltip="Sign in">
                         <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                             <circle cx="12" cy="8" r="3.25"/>
                             <path d="M5.5 19.5c1.6-3.2 4-4.75 6.5-4.75s4.9 1.55 6.5 4.75" stroke-linecap="round"/>

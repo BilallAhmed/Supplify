@@ -9476,11 +9476,18 @@
     }
 }
 
+/* Shared storefront floating controls. */
+:root {
+    --floating-control-size: 3.5rem;
+    --floating-control-radius: 1rem;
+    --floating-control-gap: .75rem;
+    --floating-control-edge: 1.5rem;
+}
 /* Storefront back-to-top action. */
 .back-to-top {
-    position: fixed; right: 1.5rem; bottom: max(1.5rem, env(safe-area-inset-bottom)); z-index: 40;
-    display: grid; place-items: center; width: 3rem; height: 3rem; padding: 0;
-    border: 1px solid rgb(255 255 255 / .22); border-radius: .75rem;
+    position: fixed; right: max(var(--floating-control-edge), env(safe-area-inset-right)); bottom: max(var(--floating-control-edge), env(safe-area-inset-bottom)); z-index: 40;
+    display: grid; place-items: center; width: var(--floating-control-size); height: var(--floating-control-size); padding: 0;
+    border: 1px solid rgb(255 255 255 / .22); border-radius: var(--floating-control-radius);
     background: var(--color-brand); color: #fff; box-shadow: 0 4px 18px rgb(0 40 38 / .18);
     cursor: pointer; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(.5rem);
     transition: opacity .22s ease, transform .22s ease, visibility .22s ease, background-color .22s ease, color .22s ease;
@@ -9495,3 +9502,10 @@ html.lenis, html.lenis body { height: auto; }
 html.lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: clip; }
 .lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* Shared display face used by homepage and editorial page headings. */
+@font-face {
+    font-family: 'Sofia Sans Condensed';
+    src: url('/fonts/sofia-sans-condensed-900-latin.woff2') format('woff2');
+    font-style: normal; font-weight: 900; font-display: swap;
+}

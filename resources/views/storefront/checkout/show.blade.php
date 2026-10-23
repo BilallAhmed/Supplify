@@ -41,11 +41,11 @@
                     <x-input label="Address line 2" name="shipping_line2" :value="$defaults['shipping_line2']" autocomplete="shipping address-line2" />
                     <div class="grid gap-4 sm:grid-cols-2">
                         <x-input label="City" name="shipping_city" required :value="$defaults['shipping_city']" autocomplete="shipping address-level2" />
-                        <x-input label="State" name="shipping_state" required :value="$defaults['shipping_state']" autocomplete="shipping address-level1" />
+                        <x-province-select name="shipping_state" required :value="$defaults['shipping_state']" autocomplete="shipping address-level1" />
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <x-input label="ZIP code" name="shipping_postal_code" required :value="$defaults['shipping_postal_code']" autocomplete="shipping postal-code" />
-                        <x-input label="Country" name="shipping_country" required :value="$defaults['shipping_country']" help="US shipping only in Phase 1." autocomplete="shipping country" />
+                        <x-input label="Postal code" name="shipping_postal_code" required :value="$defaults['shipping_postal_code']" autocomplete="shipping postal-code" />
+                        <x-select label="Country" name="shipping_country" required help="Delivery within Pakistan." autocomplete="shipping country"><option value="PK" selected>Pakistan</option></x-select>
                     </div>
                     <x-input label="Shipping phone" name="shipping_phone" :value="$defaults['shipping_phone']" autocomplete="shipping tel" />
                 </x-card>
@@ -73,11 +73,11 @@
                         <x-input label="Address line 2" name="billing_line2" :value="old('billing_line2')" autocomplete="billing address-line2" />
                         <div class="grid gap-4 sm:grid-cols-2">
                             <x-input label="City" name="billing_city" :value="old('billing_city')" autocomplete="billing address-level2" />
-                            <x-input label="State" name="billing_state" :value="old('billing_state')" autocomplete="billing address-level1" />
+                            <x-province-select name="billing_state" :value="old('billing_state')" autocomplete="billing address-level1" />
                         </div>
                         <div class="grid gap-4 sm:grid-cols-2">
-                            <x-input label="ZIP code" name="billing_postal_code" :value="old('billing_postal_code')" autocomplete="billing postal-code" />
-                            <x-input label="Country" name="billing_country" :value="old('billing_country', 'US')" autocomplete="billing country" />
+                            <x-input label="Postal code" name="billing_postal_code" :value="old('billing_postal_code')" autocomplete="billing postal-code" />
+                            <x-select label="Country" name="billing_country" autocomplete="billing country"><option value="PK" selected>Pakistan</option></x-select>
                         </div>
                         <x-input label="Billing phone" name="billing_phone" :value="old('billing_phone')" autocomplete="billing tel" />
                     </div>

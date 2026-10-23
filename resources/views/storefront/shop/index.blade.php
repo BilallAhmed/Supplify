@@ -127,6 +127,7 @@
 
 @section('content')
     <x-page-image-banner
+        variant="catalog"
         image="images/catalog/catalog-hero.webp"
         image-alt="Supplify supplements displayed on natural stone stands"
         :eyebrow="$eyebrow ?? null"
@@ -449,7 +450,7 @@
                 @else
                     <div class="shop-grid">
                         @foreach ($products as $product)
-                            <x-product-card :product="$product" />
+                            @include('storefront.home.partials.product_card', ['product' => $product, 'catalog' => true])
                         @endforeach
                     </div>
 

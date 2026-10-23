@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Storefront\AssistantController;
 use App\Http\Controllers\Storefront\BlogController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
@@ -61,6 +62,14 @@ Route::get('/blog/{post}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/search', SearchController::class)
     ->middleware('throttle:45,1')
     ->name('search');
+
+Route::get('/assistant/history', [AssistantController::class, 'history'])->middleware('throttle:60,1')->name('assistant.history');
+Route::post('/assistant/message', [AssistantController::class, 'message'])
+    ->middleware('throttle:'.(int) config('assistant.limits.rate_limit_per_minute', 20).',1')
+    ->name('assistant.message');
+Route::post('/assistant/reset', [AssistantController::class, 'reset'])
+    ->middleware('throttle:30,1')
+    ->name('assistant.reset');
 
 Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show');
 Route::post('/contact', [ContactEnquiryController::class, 'store'])

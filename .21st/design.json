@@ -123,6 +123,14 @@
     {
       "id": "homepage-admin-current-sections",
       "decision": "Homepage editor follows the nine live storefront sections in fixed order. Section-specific forms replace generic JSON; existing media library and catalog selectors control all images, copy, banners, journey steps, reasons, ribbon text and article selections. Retired sections remain archived and disabled."
+    },
+    {
+      "id": "about-heading-continuity",
+      "decision": "About Us uses the homepage Sofia Sans Condensed 900 uppercase display face across its heading hierarchy, with section headings capped at 68px, compact 30px subheadings, and white headings preserved on dark sections. Contact styling is a separate step."
+    },
+    {
+      "id": "admin-operations-and-access",
+      "decision": "Dedicated admin sign-in is served at /admin, with role-restricted customer login at /login. Dashboard is an operational overview with real counts, recent orders, stock/enquiry alerts, quick links and activity. Existing charts move intact to Analytics under Overview. Tracking & Scripts lives only inside Settings. Existing dashboard components, tokens and dark/light theme are reused."
     }
   ],
   "evidence": [

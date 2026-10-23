@@ -24,7 +24,7 @@
             class="admin-theme-toggle"
             @click="toggleTheme()"
             :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-            :title="darkMode ? 'Light mode' : 'Dark mode'"
+            :data-tooltip="darkMode ? 'Light mode' : 'Dark mode'"
         >
             <svg x-show="!darkMode" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                 <path d="M21 14.3A8.4 8.4 0 0 1 9.7 3 7 7 0 1 0 21 14.3Z" stroke-linecap="round" stroke-linejoin="round"/>
@@ -38,7 +38,7 @@
         <span class="hidden text-sm text-ink-muted sm:inline">{{ auth()->user()->name }}</span>
         <x-badge variant="brand">Admin</x-badge>
         <x-button href="{{ route('account.profile.edit') }}" variant="ghost" size="sm" class="hidden sm:inline-flex">Profile</x-button>
-        <form method="POST" action="{{ route('logout') }}">
+        <form method="POST" action="{{ route('admin.logout') }}">
             @csrf
             <x-button type="submit" variant="outline" size="sm">Sign out</x-button>
         </form>

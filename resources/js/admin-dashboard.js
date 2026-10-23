@@ -65,7 +65,7 @@ function initProductViewsChart() {
 
     const labels = (payload.labels || []).map(formatDayLabel);
 
-    new Chart(canvas.getContext('2d'), {
+    const chart = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
             labels,
@@ -98,6 +98,15 @@ function initProductViewsChart() {
                     },
                 },
                 tooltip: {
+                    backgroundColor: '#054648',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#00b883',
+                    borderWidth: 1,
+                    cornerRadius: 6,
+                    padding: 10,
+                    titleFont: { family: 'Figtree, sans-serif', size: 12, weight: '600' },
+                    bodyFont: { family: 'Figtree, sans-serif', size: 12 },
                     callbacks: {
                         title(items) {
                             return items[0]?.label || '';
@@ -132,6 +141,29 @@ function initProductViewsChart() {
             },
         },
     });
+    const applyTheme = () => {
+        const dark = document.documentElement.dataset.adminTheme === 'dark';
+        const ink = dark ? '#e2e8f0' : '#334155';
+        const grid = dark ? '#384555' : '#e2e8f0';
+        const palette = dark ? ['#5eead4', '#93c5fd', '#fcd34d', '#c4b5fd', '#fda4af', '#a3e635'] : ['#0f766e', '#2563eb', '#a16207', '#7c3aed', '#be123c', '#4d7c0f'];
+        chart.data.datasets.forEach((dataset, index) => {
+            dataset.borderColor = palette[index % palette.length];
+            dataset.backgroundColor = dataset.borderColor + '22';
+            dataset.borderDash = index >= palette.length ? [6, 3] : [];
+        });
+        chart.options.plugins.legend.labels.color = ink;
+        for (const axis of Object.values(chart.options.scales)) {
+            axis.ticks.color = ink;
+            axis.title.color = ink;
+            axis.grid.color = grid;
+            axis.border = { color: grid };
+        }
+        chart.update('none');
+    };
+    applyTheme();
+    const themeObserver = new MutationObserver(applyTheme);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-admin-theme'] });
+    window.addEventListener('pagehide', () => themeObserver.disconnect(), { once: true });
 }
 
 document.addEventListener('alpine:init', () => {

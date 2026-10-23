@@ -11,7 +11,7 @@
 ])
 
 {{-- Compact photographic banner matching About (1905x440 natural aspect). --}}
-<section class="page-banner about-hero {{ $variant === 'journal' ? 'page-banner--journal' : '' }}" aria-labelledby="{{ $headingId }}">
+<section class="page-banner about-hero {{ in_array($variant, ['journal', 'catalog'], true) ? 'page-banner--'.$variant : '' }}" aria-labelledby="{{ $headingId }}">
     <div class="page-banner__frame about-hero__banner">
         <img
             src="{{ asset($image) }}"

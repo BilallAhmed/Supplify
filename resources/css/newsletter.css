@@ -1,0 +1,25 @@
+/* Shared storefront newsletter, above the footer on every page. */
+.site-newsletter { padding-block: 4rem; background: #033b3b; color: #fff; }
+.site-newsletter__inner { width: min(calc(100% - 3rem), 80rem); max-width: none; padding-inline: 0; display: grid; align-items: center; gap: 2rem 3rem; }
+.site-newsletter__eyebrow { margin: 0 0 .65rem; font-size: .7rem; font-weight: 650; letter-spacing: .16em; text-transform: uppercase; color: #b8d9d1; }
+.site-newsletter .site-newsletter__title { margin: 0; font-family: 'Sofia Sans Condensed', var(--font-display); font-weight: 900; font-size: clamp(2rem, 2.2vw, 2.75rem); line-height: 1.08; letter-spacing: -.01em; text-transform: capitalize; color: #fff; }
+.site-newsletter__lede { margin: .75rem 0 0; max-width: 34rem; font-size: .9375rem; line-height: 1.6; color: #c2dcd6; }
+.site-newsletter__form { margin: 0; }
+.site-newsletter__label { display: block; margin-bottom: .5rem; font-size: .8125rem; font-weight: 600; color: #fff; }
+.site-newsletter__row { display: flex; gap: .625rem; }
+.site-newsletter__input { flex: 1; min-width: 0; height: 3rem; padding: 0 1rem; border: 1px solid #d2e3dd; border-radius: .5rem; background: #fff; color: #0a2a2b; font: inherit; font-size: .9375rem; }
+.site-newsletter__input::placeholder { color: #657c78; }
+.site-newsletter__submit { height: 3rem; padding: 0 1.4rem; border: 1px solid #00b883; border-radius: .5rem; background: #00b883; color: #033536; font: inherit; font-size: .875rem; font-weight: 700; cursor: pointer; transition: background-color .2s, border-color .2s; }
+.site-newsletter__submit:hover { background: #2ad19f; border-color: #2ad19f; }
+.site-newsletter :is(input, button):focus-visible { outline: 2px solid #b3ead7; outline-offset: 4px; }
+.site-newsletter__error { margin: .65rem 0 0; font-size: .8125rem; color: #ffb4a8; }
+@media (min-width: 900px) { .site-newsletter__inner { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 639px) { .site-newsletter { padding-block: 3rem; } .site-newsletter__row { flex-wrap: wrap; } .site-newsletter__input { flex-basis: 100%; } }
+@media (prefers-reduced-motion: reduce) { .site-newsletter__submit { transition: none; } }
+
+/* One complete treatment on every storefront page, including About. */
+.site-newsletter { margin: 0; background: #054648; font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif; border-bottom: 1px solid rgb(255 255 255 / .18); }
+.site-newsletter__form { padding: 1.4rem; border: 1px solid rgb(255 255 255 / .16); border-radius: 1rem; background: rgb(255 255 255 / .05); box-shadow: none; }
+.site-newsletter + footer { margin-top: 0; background: #054648; border-top: 0; }
+.site-newsletter + footer > .ui-container { width: min(calc(100% - 3rem), 80rem); max-width: none; padding-inline: 0; }
+

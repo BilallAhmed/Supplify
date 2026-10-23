@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Services\StoreSettings;
 use InvalidArgumentException;
 
 final class Money
@@ -36,12 +37,12 @@ final class Money
 
     public static function format(int $cents, ?string $currency = null): string
     {
-        $currency = strtoupper($currency ?? (string) config('store.currency', 'USD'));
+        $currency = strtoupper($currency ?? app(StoreSettings::class)->currency());
         $amount = number_format($cents / 100, 2);
 
         return match ($currency) {
             'USD' => '$'.$amount,
-            'PKR' => 'Rs '.$amount,
+            'PKR' => 'PKR '.$amount,
             default => $currency.' '.$amount,
         };
     }

@@ -19,11 +19,11 @@
     <x-input label="Address line 2" name="line2" :value="old('line2', $address->line2)" autocomplete="address-line2" />
     <div class="grid gap-4 sm:grid-cols-2">
         <x-input label="City" name="city" required :value="old('city', $address->city)" autocomplete="address-level2" />
-        <x-input label="State" name="state" required :value="old('state', $address->state)" autocomplete="address-level1" />
+        <x-province-select name="state" required :value="old('state', $address->state)" />
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
-        <x-input label="ZIP code" name="postal_code" required :value="old('postal_code', $address->postal_code)" autocomplete="postal-code" />
-        <x-input label="Country" name="country" required :value="old('country', $address->country ?: 'US')" autocomplete="country" />
+        <x-input label="Postal code" name="postal_code" required :value="old('postal_code', $address->postal_code)" autocomplete="postal-code" />
+        <x-select label="Country" name="country" required autocomplete="country"><option value="PK" selected>Pakistan</option></x-select>
     </div>
     <x-input label="Phone" name="phone" :value="old('phone', $address->phone)" autocomplete="tel" />
     <x-checkbox

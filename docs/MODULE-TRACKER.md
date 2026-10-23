@@ -290,14 +290,24 @@ Update this file at the end of every module session.
 
 ---
 
-## Module 14 — AI Sticky Chatbot
+## Module 14 — Supplify Assistant (website-only)
 
 | Field | Value |
 |-------|-------|
-| Objective | Grounded sticky assistant |
-| Dependencies | 04, 05, content; AI provider |
-| Status | **BLOCKED** (provider/model TBC) |
-| Completion notes | API costs client-billed; not in PKR 220,000 fee |
+| Objective | Guided product finder + website help (no AI API) |
+| Dependencies | 04, 05, CMS pages/blog; **queue worker + scheduler** for knowledge sync |
+| Files/components | Full stack: knowledge index/search/conversation API, Alpine widget, admin FAQ/alias/rebuild |
+| Database changes | `assistant_faqs`, `assistant_aliases`, `assistant_source_approvals`, `assistant_documents`, `assistant_document_chunks`, `assistant_sync_states` |
+| Backend work | **Layers 1–7 complete.** Dual-gate enable; CSRF + throttle; live catalog cards; medical boundaries |
+| Frontend work | Left-dock launcher/panel; welcome/history/cards/choices; Escape + live region |
+| Admin work | Settings, source approve/withdraw, FAQ CRUD, alias CRUD, queue/sync rebuild |
+| Integrations | None (no AI provider) |
+| Security checks | CSRF + throttle; markup stripped; injection/medical boundary; session isolation |
+| SEO checks | N/A |
+| Performance checks | Bounded cards/turns; live product re-read only for selected hits |
+| Tests | Full Assistant suite — **72 passed** (incl. `AssistantAdminOpsTest` + `AssistantAcceptanceTest`) |
+| Status | **COMPLETED** |
+| Completion notes | Enable: `ASSISTANT_ENABLED=true` + Admin → Assistant runtime enable. Run queue worker + scheduler. Rebuild via admin or `php artisan assistant:rebuild-knowledge`. |
 
 ---
 

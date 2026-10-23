@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\AssistantAliasController;
+use App\Http\Controllers\Admin\AssistantApprovalController;
+use App\Http\Controllers\Admin\AssistantFaqController;
+use App\Http\Controllers\Admin\AssistantRebuildController;
+use App\Http\Controllers\Admin\AssistantSettingsController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContactEnquiryController;
@@ -14,10 +20,17 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TrackingSettingsController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', DashboardController::class)->name('dashboard');
+Route::get('login', fn () => redirect()->route('admin.dashboard'))->name('login');
+Route::post('login', [AuthenticatedSessionController::class, 'store'])
+    ->middleware(['guest', 'throttle:10,1'])->name('login.store');
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('analytics', AnalyticsController::class)->name('analytics');
+    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::post('categories/quick', [CategoryController::class, 'quickStore'])->name('categories.quick');
     Route::resource('categories', CategoryController::class)->except(['show']);
@@ -32,6 +45,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('products', ProductController::class)->except(['show']);
 
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::put('inventory/{product}/variations/{variation}', [InventoryController::class, 'updateVariation'])->name('inventory.variations.update');
     Route::put('inventory/{product}', [InventoryController::class, 'update'])->name('inventory.update');
 
     Route::get('homepage', [HomepageController::class, 'edit'])->name('homepage.edit');
@@ -69,4 +83,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::get('settings/tracking', [TrackingSettingsController::class, 'edit'])->name('settings.tracking.edit');
     Route::put('settings/tracking', [TrackingSettingsController::class, 'update'])->name('settings.tracking.update');
+
+    Route::get('assistant', [AssistantSettingsController::class, 'edit'])->name('assistant.edit');
+    Route::put('assistant', [AssistantSettingsController::class, 'update'])->name('assistant.update');
+    Route::post('assistant/rebuild', AssistantRebuildController::class)->name('assistant.rebuild');
+    Route::get('assistant/sources', [AssistantApprovalController::class, 'index'])->name('assistant.sources');
+    Route::post('assistant/approvals', [AssistantApprovalController::class, 'store'])->name('assistant.approvals.store');
+    Route::delete('assistant/approvals', [AssistantApprovalController::class, 'destroy'])->name('assistant.approvals.destroy');
+    Route::resource('assistant/faqs', AssistantFaqController::class)
+        ->except(['show'])
+        ->parameters(['faqs' => 'faq'])
+        ->names('assistant.faqs');
+    Route::resource('assistant/aliases', AssistantAliasController::class)
+        ->except(['show'])
+        ->parameters(['aliases' => 'alias'])
+        ->names('assistant.aliases');
 });

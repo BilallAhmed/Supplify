@@ -1,5 +1,5 @@
 @php
-    $footerSeamless = request()->routeIs('pages.show') && request()->route('page') === 'about';
+    $footerSeamless = false;
 @endphp
 <footer
     @class([

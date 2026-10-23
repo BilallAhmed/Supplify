@@ -1,0 +1,94 @@
+/* Shared homepage display hierarchy for About Us and Contact Us. */
+:is(.about-page, .contact-page) :is(h1, h2, h3) {
+    font-family: 'Sofia Sans Condensed', var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+}
+:is(.about-page, .contact-page) h1.about-hero__title {
+    font-size: clamp(2.75rem, 2.5vw, 4rem);
+    line-height: 1.04;
+    max-width: 20ch;
+    color: #fff;
+}
+:is(.about-page, .contact-page) h2 {
+    font-size: clamp(2.75rem, 2.8vw, 4.25rem);
+    line-height: 1.04;
+    color: var(--color-brand);
+}
+.about-page :is(.about-journey__title, .about-cta__title) { color: #fff; }
+:is(.about-page, .contact-page) h3 {
+    text-transform: capitalize;
+    font-size: clamp(1.5rem, 0.8vw, 1.875rem);
+    line-height: 1.12;
+    color: var(--color-brand);
+    letter-spacing: -.005em;
+}
+.about-page .about-journey__stage-title { color: #fff; }
+@media (max-width: 767px) {
+    :is(.about-page, .contact-page) h1.about-hero__title { font-size: clamp(2rem, 7vw, 2.75rem); max-width: 24ch; }
+    :is(.about-page, .contact-page) h2 { font-size: clamp(2.25rem, 7vw, 3rem); }
+    :is(.about-page, .contact-page) h3 { font-size: 1.5rem; }
+}
+
+.about-page .about-journey__header {
+    max-width: 100%;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    text-align: center;
+}
+
+.contact-page h2 {
+    font-size: clamp(1.9rem, 1.1vw, 4.25rem);
+    line-height: 1.04;
+    color: var(--color-brand);
+}
+
+/* Journey step titles match the homepage journey card typography. */
+.about-page h3.about-journey__stage-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: -.02em;
+    text-transform: none;
+    text-wrap: wrap;
+    color: #fff;
+}
+.about-page .about-journey__stage-title + .about-journey__stage-body { margin-top: .45rem; }
+
+/* Journal listing uses the same compact page-banner hierarchy. */
+.page-banner--journal h1.about-hero__title {
+    font-family: 'Sofia Sans Condensed', var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -.015em;
+    font-size: clamp(2.75rem, 2.5vw, 4rem);
+    line-height: 1.04;
+    max-width: 20ch;
+    color: #fff;
+    text-wrap: balance;
+}
+.blog-journal .blog-toolbar__count { font-weight: 600; color: var(--color-ink); }
+.blog-journal .blog-cats__chip { min-height: 2.75rem; }
+.blog-journal .blog-featured__link { border-radius: 1.125rem; }
+.blog-journal .blog-featured__copy { gap: .9rem; }
+.blog-journal .blog-featured__meta { color: var(--color-ink-muted); letter-spacing: .02em; }
+.blog-journal .blog-featured__title { color: var(--color-brand); }
+.blog-journal .blog-card__link { border-radius: 1rem; }
+.blog-journal .blog-card__body { padding: 1.4rem; gap: .75rem; }
+.blog-journal .blog-card__meta { color: var(--color-ink-muted); }
+.blog-journal .blog-card__title { color: var(--color-brand); }
+.blog-journal :is(.blog-featured__cta, .blog-card__cta) { align-self: flex-start; width: fit-content; min-height: 2.75rem; border-bottom: 1px solid currentColor; color: var(--color-ink); transition: color .25s ease, border-color .25s ease; }
+.blog-journal :is(.blog-featured__cta, .blog-card__cta) svg { display: none; }
+.blog-journal :is(.blog-featured__link, .blog-card__link):is(:hover, :focus-visible) :is(.blog-featured__cta, .blog-card__cta) { color: #008b63; }
+.blog-journal .blog-pagination .shop-pager__summary { font-weight: 600; color: var(--color-ink); }
+@media (min-width: 1024px) {
+    .blog-journal .blog-featured__copy { padding: 2.25rem; }
+    .blog-journal .blog-grid { gap: 1.5rem; }
+    .blog-journal .blog-featured { margin-bottom: 2.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .blog-journal :is(.blog-featured__cta, .blog-card__cta) { transition: none; }
+}

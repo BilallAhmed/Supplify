@@ -10,10 +10,10 @@ class AdminFoundationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_from_admin_dashboard(): void
+    public function test_guest_sees_dedicated_admin_sign_in(): void
     {
         $this->get(route('admin.dashboard'))
-            ->assertRedirect(route('login'));
+            ->assertOk()->assertSee('Admin sign in');
     }
 
     public function test_customer_cannot_access_admin_shell(): void
